@@ -1,4 +1,4 @@
-package com.hbisoft.hbrecorderexample;
+package com.ss.Misty_Screen_Recoder_lite;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;

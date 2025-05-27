@@ -3,11 +3,11 @@ apply plugin: 'com.android.application'
 android {
     compileSdk 34
     defaultConfig {
-        applicationId "com.hbisoft.hbrecorderexample"
+        applicationId "com.ss.Misty_Screen_Recoder_lite"
         minSdk 17
         targetSdk 34
-        versionCode 1
-        versionName "1.0"
+        versionCode 7
+        versionName "3.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -21,7 +21,7 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    namespace 'com.hbisoft.hbrecorderexample'
+    namespace 'com.ss.Misty_Screen_Recoder_lite'
 
 }
 
@@ -31,6 +31,7 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'androidx.legacy:legacy-support-core-utils:1.0.0'
     implementation 'androidx.preference:preference:1.2.0'
+    implementation 'com.google.android.material:material:1.11.0'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test:runner:1.5.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
