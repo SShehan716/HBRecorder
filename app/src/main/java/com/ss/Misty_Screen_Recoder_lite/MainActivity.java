@@ -166,12 +166,12 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         setOnClickListeners();
 
         // Init HBRecorder (no need for LOLLIPOP check, minSdk is 21)
-        hbRecorder = new HBRecorder(this, this);
+            hbRecorder = new HBRecorder(this, this);
 
-        //When the user returns to the application, some UI changes might be necessary,
-        //check if recording is in progress and make changes accordingly
-        if (hbRecorder.isBusyRecording()) {
-            startbtn.setText(R.string.stop_recording);
+            //When the user returns to the application, some UI changes might be necessary,
+            //check if recording is in progress and make changes accordingly
+            if (hbRecorder.isBusyRecording()) {
+                startbtn.setText(R.string.stop_recording);
         }
 
         // Initialize ViewPager and TabLayout
@@ -198,38 +198,38 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
 
         // Examples of how to use the HBRecorderCodecInfo class to get codec info
         HBRecorderCodecInfo hbRecorderCodecInfo = new HBRecorderCodecInfo();
-        int mWidth = hbRecorder.getDefaultWidth();
-        int mHeight = hbRecorder.getDefaultHeight();
-        String mMimeType = "video/avc";
-        int mFPS = 30;
-        if (hbRecorderCodecInfo.isMimeTypeSupported(mMimeType)) {
-            String defaultVideoEncoder = hbRecorderCodecInfo.getDefaultVideoEncoderName(mMimeType);
-            boolean isSizeAndFramerateSupported = hbRecorderCodecInfo.isSizeAndFramerateSupported(mWidth, mHeight, mFPS, mMimeType, ORIENTATION_PORTRAIT);
-            Log.e("EXAMPLE", "THIS IS AN EXAMPLE OF HOW TO USE THE (HBRecorderCodecInfo) TO GET CODEC INFO:");
-            Log.e("HBRecorderCodecInfo", "defaultVideoEncoder for (" + mMimeType + ") -> " + defaultVideoEncoder);
-            Log.e("HBRecorderCodecInfo", "MaxSupportedFrameRate -> " + hbRecorderCodecInfo.getMaxSupportedFrameRate(mWidth, mHeight, mMimeType));
-            Log.e("HBRecorderCodecInfo", "MaxSupportedBitrate -> " + hbRecorderCodecInfo.getMaxSupportedBitrate(mMimeType));
-            Log.e("HBRecorderCodecInfo", "isSizeAndFramerateSupported @ Width = "+mWidth+" Height = "+mHeight+" FPS = "+mFPS+" -> " + isSizeAndFramerateSupported);
-            Log.e("HBRecorderCodecInfo", "isSizeSupported @ Width = "+mWidth+" Height = "+mHeight+" -> " + hbRecorderCodecInfo.isSizeSupported(mWidth, mHeight, mMimeType));
-            Log.e("HBRecorderCodecInfo", "Default Video Format = " + hbRecorderCodecInfo.getDefaultVideoFormat());
+            int mWidth = hbRecorder.getDefaultWidth();
+            int mHeight = hbRecorder.getDefaultHeight();
+            String mMimeType = "video/avc";
+            int mFPS = 30;
+            if (hbRecorderCodecInfo.isMimeTypeSupported(mMimeType)) {
+                String defaultVideoEncoder = hbRecorderCodecInfo.getDefaultVideoEncoderName(mMimeType);
+                boolean isSizeAndFramerateSupported = hbRecorderCodecInfo.isSizeAndFramerateSupported(mWidth, mHeight, mFPS, mMimeType, ORIENTATION_PORTRAIT);
+                Log.e("EXAMPLE", "THIS IS AN EXAMPLE OF HOW TO USE THE (HBRecorderCodecInfo) TO GET CODEC INFO:");
+                Log.e("HBRecorderCodecInfo", "defaultVideoEncoder for (" + mMimeType + ") -> " + defaultVideoEncoder);
+                Log.e("HBRecorderCodecInfo", "MaxSupportedFrameRate -> " + hbRecorderCodecInfo.getMaxSupportedFrameRate(mWidth, mHeight, mMimeType));
+                Log.e("HBRecorderCodecInfo", "MaxSupportedBitrate -> " + hbRecorderCodecInfo.getMaxSupportedBitrate(mMimeType));
+                Log.e("HBRecorderCodecInfo", "isSizeAndFramerateSupported @ Width = "+mWidth+" Height = "+mHeight+" FPS = "+mFPS+" -> " + isSizeAndFramerateSupported);
+                Log.e("HBRecorderCodecInfo", "isSizeSupported @ Width = "+mWidth+" Height = "+mHeight+" -> " + hbRecorderCodecInfo.isSizeSupported(mWidth, mHeight, mMimeType));
+                Log.e("HBRecorderCodecInfo", "Default Video Format = " + hbRecorderCodecInfo.getDefaultVideoFormat());
 
-            HashMap<String, String> supportedVideoMimeTypes = hbRecorderCodecInfo.getSupportedVideoMimeTypes();
-            for (Map.Entry<String, String> entry : supportedVideoMimeTypes.entrySet()) {
-                Log.e("HBRecorderCodecInfo", "Supported VIDEO encoders and mime types : " + entry.getKey() + " -> " + entry.getValue());
-            }
+                HashMap<String, String> supportedVideoMimeTypes = hbRecorderCodecInfo.getSupportedVideoMimeTypes();
+                for (Map.Entry<String, String> entry : supportedVideoMimeTypes.entrySet()) {
+                    Log.e("HBRecorderCodecInfo", "Supported VIDEO encoders and mime types : " + entry.getKey() + " -> " + entry.getValue());
+                }
 
-            HashMap<String, String> supportedAudioMimeTypes = hbRecorderCodecInfo.getSupportedAudioMimeTypes();
-            for (Map.Entry<String, String> entry : supportedAudioMimeTypes.entrySet()) {
-                Log.e("HBRecorderCodecInfo", "Supported AUDIO encoders and mime types : " + entry.getKey() + " -> " + entry.getValue());
-            }
+                HashMap<String, String> supportedAudioMimeTypes = hbRecorderCodecInfo.getSupportedAudioMimeTypes();
+                for (Map.Entry<String, String> entry : supportedAudioMimeTypes.entrySet()) {
+                    Log.e("HBRecorderCodecInfo", "Supported AUDIO encoders and mime types : " + entry.getKey() + " -> " + entry.getValue());
+                }
 
-            ArrayList<String> supportedVideoFormats = hbRecorderCodecInfo.getSupportedVideoFormats();
-            for (int j = 0; j < supportedVideoFormats.size(); j++) {
-                Log.e("HBRecorderCodecInfo", "Available Video Formats : " + supportedVideoFormats.get(j));
-            }
+                ArrayList<String> supportedVideoFormats = hbRecorderCodecInfo.getSupportedVideoFormats();
+                for (int j = 0; j < supportedVideoFormats.size(); j++) {
+                    Log.e("HBRecorderCodecInfo", "Available Video Formats : " + supportedVideoFormats.get(j));
+                }
         } else {
-            Log.e("HBRecorderCodecInfo", "MimeType not supported");
-        }
+                Log.e("HBRecorderCodecInfo", "MimeType not supported");
+            }
 
         // Register receiver for floating dock actions
         floatingDockReceiver = new BroadcastReceiver() {
@@ -372,11 +372,11 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
                 // Ignore clicks while waiting for stop to complete
                 return;
             }
-            if (!hbRecorder.isBusyRecording()) {
-                startRecordingScreen();
-            } else {
+                if (!hbRecorder.isBusyRecording()) {
+                    startRecordingScreen();
+                } else {
                 isStopPending = true;
-                hbRecorder.stopScreenRecording();
+                    hbRecorder.stopScreenRecording();
                 // The button text will be set to START in HBRecorderOnComplete()
             }
         });
@@ -482,15 +482,15 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         isStopPending = false;
         stopService(new Intent(this, FloatingDockService.class));
         showLongToast("Saved Successfully");
-        if (hbRecorder.wasUriSet()) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ) {
-                updateGalleryUri();
-            } else {
+            if (hbRecorder.wasUriSet()) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ) {
+                    updateGalleryUri();
+                } else {
+                    refreshGalleryFile();
+                }
+        } else {
                 refreshGalleryFile();
             }
-        } else {
-            refreshGalleryFile();
-        }
     }
 
     // Called when error occurs
@@ -711,10 +711,10 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == SCREEN_RECORD_REQUEST_CODE) {
-            if (resultCode == RESULT_OK) {
-                setOutputPath();
-                hbRecorder.startScreenRecording(data, resultCode);
+            if (requestCode == SCREEN_RECORD_REQUEST_CODE) {
+                if (resultCode == RESULT_OK) {
+                    setOutputPath();
+                    hbRecorder.startScreenRecording(data, resultCode);
                 startbtn.setText(R.string.stop_recording);
                 // Start floating dock overlay if overlay permission is granted
                 if (Settings.canDrawOverlays(this)) {
@@ -727,8 +727,8 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
                     Toast.makeText(this, "Please grant overlay permission to show the floating dock.", Toast.LENGTH_LONG).show();
                 }
             } else {
-                startbtn.setText(R.string.start_recording);
-            }
+                    startbtn.setText(R.string.start_recording);
+                }
         } else if (requestCode == OVERLAY_PERMISSION_REQUEST_CODE) {
             // User returned from overlay permission screen
             if (Settings.canDrawOverlays(this)) {
@@ -901,9 +901,9 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
     }
 
     private void startRecording() {
-        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO, PERMISSION_REQUEST_CODE) &&
-                checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, PERMISSION_REQUEST_CODE)) {
-            startScreenRecording();
+            if (checkSelfPermission(Manifest.permission.RECORD_AUDIO, PERMISSION_REQUEST_CODE) &&
+                    checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE, PERMISSION_REQUEST_CODE)) {
+                startScreenRecording();
         }
     }
 
