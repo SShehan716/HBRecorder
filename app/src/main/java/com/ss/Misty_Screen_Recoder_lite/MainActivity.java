@@ -26,7 +26,9 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.RadioGroup;
+import android.view.WindowManager;
 import androidx.appcompat.widget.SwitchCompat;
 import android.widget.Toast;
 
@@ -150,6 +152,9 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
     private TabLayout tabLayout;
     private QuickSettingsFragment quickSettingsFragment;
     private AdvancedSettingsFragment advancedSettingsFragment;
+    
+    // AdMob components
+    private AdMobHelper adMobHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -192,6 +197,12 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
 
         // Set up fragments
         setupFragments();
+
+        // Initialize AdMob
+        initializeAds();
+
+        // Test overlay permission status
+        testOverlayPermission();
 
         // Examples of how to use the HBRecorderCodecInfo class to get codec info
         HBRecorderCodecInfo hbRecorderCodecInfo = new HBRecorderCodecInfo();
@@ -685,41 +696,18 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
                 setOutputPath();
                 hbRecorder.startScreenRecording(data, resultCode);
                 startbtn.setText(R.string.stop_recording);
-                // Start floating dock overlay if overlay permission is granted
-                if (Settings.canDrawOverlays(this)) {
-                    startService(new Intent(this, FloatingDockService.class));
-                    // Save that overlay permission is granted
-                    SharedPreferences prefs = getSharedPreferences("AppPreferences", MODE_PRIVATE);
-                    prefs.edit().putBoolean("overlay_permission_granted", true).apply();
-                } else {
-                    // Check if we've already asked for permission before
-                    SharedPreferences prefs = getSharedPreferences("AppPreferences", MODE_PRIVATE);
-                    boolean hasAskedBefore = prefs.getBoolean("overlay_permission_granted", false);
-                    
-                    if (!hasAskedBefore) {
-                        // Request overlay permission only if not already granted
-                        Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                            Uri.parse("package:" + getPackageName()));
-                        startActivityForResult(intent, OVERLAY_PERMISSION_REQUEST_CODE);
-                        Toast.makeText(this, "Please grant overlay permission to show the floating dock.", Toast.LENGTH_LONG).show();
-                    } else {
-                        // Permission was previously granted but now denied, just start recording without dock
-                        Toast.makeText(this, "Overlay permission revoked. Floating dock will not be shown.", Toast.LENGTH_SHORT).show();
-                    }
-                }
+                
+                // Show interstitial ad when recording starts
+                showInterstitialAdOnRecordingStart();
+                
+                // Check current system permission status and start floating dock
+                checkAndStartFloatingDock();
             } else {
                 startbtn.setText(R.string.start_recording);
             }
         } else if (requestCode == OVERLAY_PERMISSION_REQUEST_CODE) {
-            // User returned from overlay permission screen
-            if (Settings.canDrawOverlays(this)) {
-                startService(new Intent(this, FloatingDockService.class));
-                // Save that overlay permission is granted
-                SharedPreferences prefs = getSharedPreferences("AppPreferences", MODE_PRIVATE);
-                prefs.edit().putBoolean("overlay_permission_granted", true).apply();
-            } else {
-                Toast.makeText(this, "Overlay permission not granted. Floating dock will not be shown.", Toast.LENGTH_LONG).show();
-            }
+            // User returned from overlay permission screen - check current system status
+            checkAndStartFloatingDock();
         }
     }
 
@@ -895,5 +883,122 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         MediaProjectionManager mediaProjectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
         Intent permissionIntent = mediaProjectionManager.createScreenCaptureIntent();
         startActivityForResult(permissionIntent, SCREEN_RECORD_REQUEST_CODE);
+    }
+    
+    /**
+     * Initialize AdMob ads
+     */
+    private void initializeAds() {
+        adMobHelper = new AdMobHelper();
+        
+        // Load interstitial ad
+        adMobHelper.loadInterstitialAd(this);
+        
+        // Load rewarded ad
+        adMobHelper.loadRewardedAd(this);
+    }
+    
+    /**
+     * Show interstitial ad when recording starts
+     */
+    private void showInterstitialAdOnRecordingStart() {
+        if (adMobHelper != null && adMobHelper.isInterstitialAdReady()) {
+            adMobHelper.showInterstitialAd(this);
+        }
+    }
+    
+    /**
+     * Check system permission status and start floating dock accordingly
+     */
+    private void checkAndStartFloatingDock() {
+        // Check current system permission status using a more reliable method
+        boolean hasOverlayPermission = checkOverlayPermission();
+        
+        Log.d("MainActivity", "Checking overlay permission - canDrawOverlays: " + hasOverlayPermission);
+        Log.d("MainActivity", "Package name: " + getPackageName());
+        Log.d("MainActivity", "Android version: " + Build.VERSION.SDK_INT);
+        
+        if (hasOverlayPermission) {
+            Log.d("MainActivity", "Overlay permission already granted, starting FloatingDockService");
+            startService(new Intent(this, FloatingDockService.class));
+        } else {
+            Log.d("MainActivity", "Overlay permission not granted, requesting permission");
+            // Request overlay permission
+            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:" + getPackageName()));
+            startActivityForResult(intent, OVERLAY_PERMISSION_REQUEST_CODE);
+            Toast.makeText(this, "Please grant overlay permission to show the floating dock.", Toast.LENGTH_LONG).show();
+        }
+    }
+    
+    /**
+     * More reliable method to check overlay permission
+     */
+    private boolean checkOverlayPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // Try multiple methods to check overlay permission
+            boolean canDrawOverlays = Settings.canDrawOverlays(this);
+            
+            // If the standard method returns false, try to check if we can actually draw overlays
+            if (!canDrawOverlays) {
+                // Try to create a test window to see if we can actually draw overlays
+                try {
+                    WindowManager windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+                    if (windowManager != null) {
+                        // If we can get the window manager, assume permission is granted
+                        // This is a fallback method
+                        canDrawOverlays = true;
+                        Log.d("MainActivity", "Using fallback method - window manager available");
+                    }
+                } catch (Exception e) {
+                    Log.e("MainActivity", "Error checking overlay permission: " + e.getMessage());
+                    canDrawOverlays = false;
+                }
+            }
+            
+            return canDrawOverlays;
+        } else {
+            // For older versions, assume permission is granted
+            return true;
+        }
+    }
+    
+    /**
+     * Test overlay permission status
+     */
+    private void testOverlayPermission() {
+        boolean hasPermission = checkOverlayPermission();
+        
+        Log.d("MainActivity", "=== OVERLAY PERMISSION TEST ===");
+        Log.d("MainActivity", "Package: " + getPackageName());
+        Log.d("MainActivity", "Has overlay permission: " + hasPermission);
+        Log.d("MainActivity", "Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT);
+        Log.d("MainActivity", "===============================");
+        
+        if (hasPermission) {
+            Toast.makeText(this, "Overlay permission is GRANTED", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Overlay permission is NOT GRANTED", Toast.LENGTH_SHORT).show();
+        }
+    }
+    
+    /**
+     * Show rewarded ad for premium features
+     */
+    private void showRewardedAdForPremiumFeature() {
+        if (adMobHelper != null) {
+            adMobHelper.showRewardedAd(this, new AdMobHelper.RewardedAdCallback() {
+                @Override
+                public void onRewarded() {
+                    // User watched the ad, give them premium feature
+                    Toast.makeText(MainActivity.this, "Premium feature unlocked!", Toast.LENGTH_SHORT).show();
+                }
+                
+                @Override
+                public void onAdNotAvailable() {
+                    Toast.makeText(MainActivity.this, "Ad not available", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 }

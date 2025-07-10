@@ -7,6 +7,7 @@ import android.graphics.PixelFormat;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -32,6 +33,7 @@ public class FloatingDockService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.d("FloatingDockService", "Service onCreate called");
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         addFloatingDock();
     }
@@ -139,6 +141,7 @@ public class FloatingDockService extends Service {
         recorderBar.setVisibility(View.GONE);
 
         windowManager.addView(floatingView, params);
+        Log.d("FloatingDockService", "Floating dock view added to window manager");
     }
 
     @Override
