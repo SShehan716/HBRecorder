@@ -37,12 +37,8 @@ public class FloatingDockService extends Service {
     }
 
     private void addFloatingDock() {
-        int layoutFlag;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            layoutFlag = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
-        } else {
-            layoutFlag = WindowManager.LayoutParams.TYPE_PHONE;
-        }
+        int layoutFlag = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ?
+                WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : WindowManager.LayoutParams.TYPE_PHONE;
         params = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.WRAP_CONTENT,
                 WindowManager.LayoutParams.WRAP_CONTENT,
@@ -53,50 +49,31 @@ public class FloatingDockService extends Service {
         params.x = 0;
         params.y = 100;
 
-        // Use a themed context to inflate the layout so Material components work
         Context themedContext = new android.view.ContextThemeWrapper(this, R.style.AppTheme);
         LayoutInflater inflater = LayoutInflater.from(themedContext);
         floatingView = inflater.inflate(R.layout.floating_dock, null);
 
         ImageView recorderIcon = floatingView.findViewById(R.id.recorder_icon);
         LinearLayout recorderBar = floatingView.findViewById(R.id.recorder_bar);
-        ImageView closeIcon = floatingView.findViewById(R.id.close_icon);
-        ImageView pauseIcon = floatingView.findViewById(R.id.pause_icon);
-        ImageView stopIcon = floatingView.findViewById(R.id.stop_icon);
         TextView timerText = floatingView.findViewById(R.id.timer_text);
+        ImageView closeIcon = floatingView.findViewById(R.id.close_icon);
 
-        final boolean[] isExpanded = {false};
         final int[] downRawX = {0};
         final int[] downRawY = {0};
-        final int CLICK_DRAG_TOLERANCE = 10; // px
+        final int CLICK_DRAG_TOLERANCE = 10;
         final int screenWidth = getResources().getDisplayMetrics().widthPixels;
 
-        // Toggle expand/collapse
+        // Only show timer when expanded (recorderBar visible)
         recorderIcon.setOnClickListener(v -> {
-            // Only expand if not dragged
-            if (!recorderIcon.isPressed()) return;
             recorderIcon.setVisibility(View.GONE);
             recorderBar.setVisibility(View.VISIBLE);
-            isExpanded[0] = true;
         });
         closeIcon.setOnClickListener(v -> {
             recorderBar.setVisibility(View.GONE);
             recorderIcon.setVisibility(View.VISIBLE);
-            isExpanded[0] = false;
         });
 
-        pauseIcon.setOnClickListener(v -> {
-            Intent intent = new Intent("com.ss.Misty_Screen_Recoder_lite.ACTION_PAUSE_RECORDING");
-            sendBroadcast(intent);
-//            android.widget.Toast.makeText(getApplicationContext(), "Pause pressed", android.widget.Toast.LENGTH_SHORT).show();
-        });
-        stopIcon.setOnClickListener(v -> {
-            Intent intent = new Intent("com.ss.Misty_Screen_Recoder_lite.ACTION_STOP_RECORDING");
-            sendBroadcast(intent);
-//            android.widget.Toast.makeText(getApplicationContext(), "Stop pressed", android.widget.Toast.LENGTH_SHORT).show();
-        });
-
-        // Drag logic: attach to both icon and bar
+        // Drag logic for both icon and bar
         View.OnTouchListener dragListener = (v, event) -> {
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
@@ -114,7 +91,6 @@ public class FloatingDockService extends Service {
                     params.x = initialX + deltaX;
                     params.y = initialY + deltaY;
                     windowManager.updateViewLayout(floatingView, params);
-                    // If moved enough, mark as not a click
                     if (Math.abs(deltaX) > CLICK_DRAG_TOLERANCE || Math.abs(deltaY) > CLICK_DRAG_TOLERANCE) {
                         v.setPressed(false);
                     }
@@ -124,7 +100,6 @@ public class FloatingDockService extends Service {
                     int upRawY = (int) event.getRawY();
                     int upDeltaX = upRawX - downRawX[0];
                     int upDeltaY = upRawY - downRawY[0];
-                    // Snap to edge
                     int middle = screenWidth / 2;
                     if (params.x + v.getWidth() / 2 < middle) {
                         params.x = 0;
@@ -132,7 +107,6 @@ public class FloatingDockService extends Service {
                         params.x = screenWidth - v.getWidth();
                     }
                     windowManager.updateViewLayout(floatingView, params);
-                    // If not moved much, treat as click
                     if (Math.abs(upDeltaX) < CLICK_DRAG_TOLERANCE && Math.abs(upDeltaY) < CLICK_DRAG_TOLERANCE) {
                         v.performClick();
                     }
@@ -143,6 +117,7 @@ public class FloatingDockService extends Service {
         recorderIcon.setOnTouchListener(dragListener);
         recorderBar.setOnTouchListener(dragListener);
 
+        // Timer logic (always running, only visible when expanded)
         timerHandler = new Handler();
         secondsElapsed = 0;
         timerRunnable = new Runnable() {
@@ -158,6 +133,10 @@ public class FloatingDockService extends Service {
             }
         };
         timerHandler.post(timerRunnable);
+
+        // Start with only icon visible
+        recorderIcon.setVisibility(View.VISIBLE);
+        recorderBar.setVisibility(View.GONE);
 
         windowManager.addView(floatingView, params);
     }

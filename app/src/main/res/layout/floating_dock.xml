@@ -14,7 +14,7 @@
         android:layout_gravity="center_vertical|start"
         android:visibility="visible"/>
 
-    <!-- Expanded: Purple rounded rectangle bar with close, pause, stop, timer -->
+    <!-- Expanded: Purple rounded rectangle bar with close icon and timer -->
     <LinearLayout
         android:id="@+id/recorder_bar"
         android:layout_width="wrap_content"
@@ -37,29 +37,6 @@
             android:background="@android:color/transparent"
             android:alpha="0.7"
             android:padding="4dp"/>
-
-        <!-- Pause button -->
-        <ImageView
-            android:id="@+id/pause_icon"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@drawable/ic_pause"
-            android:tint="@android:color/white"
-            android:background="@android:color/transparent"
-            android:padding="8dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"/>
-
-        <!-- Stop button -->
-        <ImageView
-            android:id="@+id/stop_icon"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:src="@drawable/ic_stop"
-            android:tint="@android:color/white"
-            android:background="@android:color/transparent"
-            android:padding="8dp"
-            android:layout_marginEnd="8dp"/>
 
         <!-- Timer -->
         <TextView

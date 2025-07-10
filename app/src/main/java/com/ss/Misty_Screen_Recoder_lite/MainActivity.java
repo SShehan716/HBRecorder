@@ -65,8 +65,7 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
-import android.content.BroadcastReceiver;
-import android.content.IntentFilter;
+
 
 /**
  * Created by HBiSoft on 13 Aug 2019
@@ -152,8 +151,6 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
     private QuickSettingsFragment quickSettingsFragment;
     private AdvancedSettingsFragment advancedSettingsFragment;
 
-    private BroadcastReceiver floatingDockReceiver;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -230,34 +227,6 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         } else {
                 Log.e("HBRecorderCodecInfo", "MimeType not supported");
             }
-
-        // Register receiver for floating dock actions
-        floatingDockReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                String action = intent.getAction();
-                if ("com.ss.Misty_Screen_Recoder_lite.ACTION_PAUSE_RECORDING".equals(action)) {
-                    // TODO: Implement pause logic if supported by HBRecorder
-                    Toast.makeText(MainActivity.this, "Pause pressed (implement logic)", Toast.LENGTH_SHORT).show();
-                } else if ("com.ss.Misty_Screen_Recoder_lite.ACTION_STOP_RECORDING".equals(action)) {
-                    if (hbRecorder.isBusyRecording()) {
-                        hbRecorder.stopScreenRecording();
-                    }
-                }
-            }
-        };
-        IntentFilter filter = new IntentFilter();
-        filter.addAction("com.ss.Misty_Screen_Recoder_lite.ACTION_PAUSE_RECORDING");
-        filter.addAction("com.ss.Misty_Screen_Recoder_lite.ACTION_STOP_RECORDING");
-        registerReceiver(floatingDockReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (floatingDockReceiver != null) {
-            unregisterReceiver(floatingDockReceiver);
-        }
     }
 
     private void requestNotificationPermission() {
@@ -711,28 +680,43 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-            if (requestCode == SCREEN_RECORD_REQUEST_CODE) {
-                if (resultCode == RESULT_OK) {
-                    setOutputPath();
-                    hbRecorder.startScreenRecording(data, resultCode);
+        if (requestCode == SCREEN_RECORD_REQUEST_CODE) {
+            if (resultCode == RESULT_OK) {
+                setOutputPath();
+                hbRecorder.startScreenRecording(data, resultCode);
                 startbtn.setText(R.string.stop_recording);
                 // Start floating dock overlay if overlay permission is granted
                 if (Settings.canDrawOverlays(this)) {
                     startService(new Intent(this, FloatingDockService.class));
+                    // Save that overlay permission is granted
+                    SharedPreferences prefs = getSharedPreferences("AppPreferences", MODE_PRIVATE);
+                    prefs.edit().putBoolean("overlay_permission_granted", true).apply();
                 } else {
-                    // Request overlay permission
-                    Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                        Uri.parse("package:" + getPackageName()));
-                    startActivityForResult(intent, OVERLAY_PERMISSION_REQUEST_CODE);
-                    Toast.makeText(this, "Please grant overlay permission to show the floating dock.", Toast.LENGTH_LONG).show();
+                    // Check if we've already asked for permission before
+                    SharedPreferences prefs = getSharedPreferences("AppPreferences", MODE_PRIVATE);
+                    boolean hasAskedBefore = prefs.getBoolean("overlay_permission_granted", false);
+                    
+                    if (!hasAskedBefore) {
+                        // Request overlay permission only if not already granted
+                        Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            Uri.parse("package:" + getPackageName()));
+                        startActivityForResult(intent, OVERLAY_PERMISSION_REQUEST_CODE);
+                        Toast.makeText(this, "Please grant overlay permission to show the floating dock.", Toast.LENGTH_LONG).show();
+                    } else {
+                        // Permission was previously granted but now denied, just start recording without dock
+                        Toast.makeText(this, "Overlay permission revoked. Floating dock will not be shown.", Toast.LENGTH_SHORT).show();
+                    }
                 }
             } else {
-                    startbtn.setText(R.string.start_recording);
-                }
+                startbtn.setText(R.string.start_recording);
+            }
         } else if (requestCode == OVERLAY_PERMISSION_REQUEST_CODE) {
             // User returned from overlay permission screen
             if (Settings.canDrawOverlays(this)) {
                 startService(new Intent(this, FloatingDockService.class));
+                // Save that overlay permission is granted
+                SharedPreferences prefs = getSharedPreferences("AppPreferences", MODE_PRIVATE);
+                prefs.edit().putBoolean("overlay_permission_granted", true).apply();
             } else {
                 Toast.makeText(this, "Overlay permission not granted. Floating dock will not be shown.", Toast.LENGTH_LONG).show();
             }
