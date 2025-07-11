@@ -33,7 +33,7 @@ public class SettingsActivity extends AppCompatActivity {
     public static class MainPreferenceFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener{
         ListPreference key_video_resolution, key_audio_source, key_video_encoder, key_video_fps, key_video_bitrate, key_output_format;
         SwitchPreference key_record_audio, key_dark_mode;
-        Preference key_floating_dock_permission;
+        Preference key_floating_dock_permission, key_privacy_policy;
 
         @Override
         public void onCreate(final Bundle savedInstanceState) {
@@ -52,6 +52,12 @@ public class SettingsActivity extends AppCompatActivity {
             // Set up floating dock permission preference
             if (key_floating_dock_permission != null) {
                 key_floating_dock_permission.setOnPreferenceClickListener(this);
+            }
+
+            // Set up privacy policy preference
+            key_privacy_policy = findPreference("key_privacy_policy");
+            if (key_privacy_policy != null) {
+                key_privacy_policy.setOnPreferenceClickListener(this);
             }
 
             key_record_audio = findPreference(getString(R.string.key_record_audio));
@@ -175,6 +181,16 @@ public class SettingsActivity extends AppCompatActivity {
                     Toast.makeText(requireContext(), "Please grant overlay permission", Toast.LENGTH_LONG).show();
                 } else {
                     Toast.makeText(requireContext(), "Overlay permission not needed on this Android version", Toast.LENGTH_SHORT).show();
+                }
+                return true;
+            } else if ("key_privacy_policy".equals(preference.getKey())) {
+                // Open privacy policy (you can replace this URL with your actual privacy policy URL)
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse("https://github.com/yourusername/your-repo/blob/main/PRIVACY_POLICY.md"));
+                    startActivity(intent);
+                } catch (Exception e) {
+                    Toast.makeText(requireContext(), "Unable to open privacy policy", Toast.LENGTH_SHORT).show();
                 }
                 return true;
             }
