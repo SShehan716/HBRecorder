@@ -999,26 +999,6 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         }
     }
     
-    /**
-     * Show rewarded ad for premium features (lazy loading)
-     */
-    private void showRewardedAdForPremiumFeature() {
-        if (adMobHelper != null) {
-            adMobHelper.showRewardedAd(this, new AdMobHelper.RewardedAdCallback() {
-                @Override
-                public void onRewarded() {
-                    // User watched the ad, give them premium feature
-                    Toast.makeText(MainActivity.this, "Premium feature unlocked!", Toast.LENGTH_SHORT).show();
-                }
-                
-                @Override
-                public void onAdNotAvailable() {
-                    Toast.makeText(MainActivity.this, "Ad not available", Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
-    }
-    
     @Override
     protected void onResume() {
         super.onResume();

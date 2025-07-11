@@ -25,10 +25,13 @@
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
         
-        <!-- AdMob App ID -->
+        <!-- AdMob App ID (use test ID for development, real ID for production) -->
+        <!-- <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713"/> -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713"/>
+            android:value="ca-app-pub-3318833775820712~4748748589"/>
         
         <activity android:name="com.ss.Misty_Screen_Recoder_lite.SettingsActivity"/>
         <activity android:name="com.ss.Misty_Screen_Recoder_lite.MainActivity"
