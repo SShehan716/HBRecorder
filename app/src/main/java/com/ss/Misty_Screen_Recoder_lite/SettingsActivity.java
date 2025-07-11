@@ -187,7 +187,7 @@ public class SettingsActivity extends AppCompatActivity {
                 // Open privacy policy (you can replace this URL with your actual privacy policy URL)
                 try {
                     Intent intent = new Intent(Intent.ACTION_VIEW);
-                    intent.setData(Uri.parse("https://github.com/yourusername/your-repo/blob/main/PRIVACY_POLICY.md"));
+                    intent.setData(Uri.parse("https://sshehan716.github.io/Misty-Screen-Recorder-Lite-Privacy-Policy"));
                     startActivity(intent);
                 } catch (Exception e) {
                     Toast.makeText(requireContext(), "Unable to open privacy policy", Toast.LENGTH_SHORT).show();
