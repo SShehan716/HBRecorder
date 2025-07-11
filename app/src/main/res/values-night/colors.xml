@@ -1,0 +1,18 @@
+<resources>
+    <color name="main_background">#121212</color>
+    <color name="text_primary">#FFFFFF</color>
+    <color name="text_secondary">#CCCCCC</color>
+    <color name="colorPrimary">#BB86FC</color> <!-- Brighter purple for dark mode -->
+    <color name="colorPrimaryDark">#4B1C7A</color>
+    <color name="colorAccent">#BB86FC</color>
+    <color name="gray">#888888</color>
+    <color name="white">#FFFFFF</color>
+    <!-- For toggle and tab visibility in dark mode -->
+    <color name="toggle_selected_bg">#BB86FC</color>
+    <color name="toggle_unselected_bg">#222222</color>
+    <color name="toggle_selected_text">#FFFFFF</color>
+    <color name="toggle_unselected_text">#CCCCCC</color>
+    <color name="tab_indicator">#BB86FC</color>
+    <color name="tab_text_selected">#BB86FC</color>
+    <color name="tab_text_unselected">#CCCCCC</color>
+</resources> 
