@@ -3,6 +3,7 @@ package com.ss.Misty_Screen_Recoder_lite;
 import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
+import com.ss.Misty_Screen_Recoder_lite.LogUtils;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
@@ -47,7 +48,7 @@ public class AdMobHelper {
         if (!isSdkInitialized) {
             MobileAds.initialize(context, initializationStatus -> {
                 isSdkInitialized = true;
-                Log.d(TAG, "AdMob SDK initialized");
+                LogUtils.d(TAG, "AdMob SDK initialized");
             });
         }
     }
@@ -103,14 +104,14 @@ public class AdMobHelper {
                     public void onAdLoaded(InterstitialAd ad) {
                         interstitialAd = ad;
                         isLoadingInterstitial = false;
-                        Log.d(TAG, "Interstitial ad loaded");
+                        LogUtils.d(TAG, "Interstitial ad loaded");
                         
                         // Set full screen content callback
                         interstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
                             @Override
                             public void onAdDismissedFullScreenContent() {
                                 interstitialAd = null;
-                                Log.d(TAG, "Interstitial ad dismissed");
+                                LogUtils.d(TAG, "Interstitial ad dismissed");
                                 // Load next ad automatically
                                 loadInterstitialAd(context, null);
                             }
@@ -118,12 +119,12 @@ public class AdMobHelper {
                             @Override
                             public void onAdFailedToShowFullScreenContent(AdError adError) {
                                 interstitialAd = null;
-                                Log.e(TAG, "Interstitial ad failed to show: " + adError.getMessage());
+                                LogUtils.e(TAG, "Interstitial ad failed to show: " + adError.getMessage());
                             }
                             
                             @Override
                             public void onAdShowedFullScreenContent() {
-                                Log.d(TAG, "Interstitial ad showed full screen content");
+                                LogUtils.d(TAG, "Interstitial ad showed full screen content");
                             }
                         });
                         
@@ -137,7 +138,7 @@ public class AdMobHelper {
                     public void onAdFailedToLoad(LoadAdError loadAdError) {
                         interstitialAd = null;
                         isLoadingInterstitial = false;
-                        Log.e(TAG, "Interstitial ad failed to load: " + loadAdError.getMessage());
+                        LogUtils.e(TAG, "Interstitial ad failed to load: " + loadAdError.getMessage());
                         
                         if (interstitialLoadCallback != null) {
                             interstitialLoadCallback.onAdFailedToLoad(loadAdError.getMessage());
@@ -157,7 +158,7 @@ public class AdMobHelper {
                 callback.onAdLoaded();
             }
         } else {
-            Log.d(TAG, "Interstitial ad not ready, loading...");
+            LogUtils.d(TAG, "Interstitial ad not ready, loading...");
             loadInterstitialAd(activity, new AdLoadCallback() {
                 @Override
                 public void onAdLoaded() {
@@ -209,7 +210,7 @@ public class AdMobHelper {
                     public void onAdLoaded(RewardedAd ad) {
                         rewardedAd = ad;
                         isLoadingRewarded = false;
-                        Log.d(TAG, "Rewarded ad loaded");
+                        LogUtils.d(TAG, "Rewarded ad loaded");
                         
                         if (rewardedLoadCallback != null) {
                             rewardedLoadCallback.onAdLoaded();
@@ -221,7 +222,7 @@ public class AdMobHelper {
                     public void onAdFailedToLoad(LoadAdError loadAdError) {
                         rewardedAd = null;
                         isLoadingRewarded = false;
-                        Log.e(TAG, "Rewarded ad failed to load: " + loadAdError.getMessage());
+                        LogUtils.e(TAG, "Rewarded ad failed to load: " + loadAdError.getMessage());
                         
                         if (rewardedLoadCallback != null) {
                             rewardedLoadCallback.onAdFailedToLoad(loadAdError.getMessage());
@@ -238,18 +239,18 @@ public class AdMobHelper {
         if (rewardedAd != null) {
             rewardedAd.setFullScreenContentCallback(new FullScreenContentCallback() {
                 @Override
-                public void onAdDismissedFullScreenContent() {
-                    rewardedAd = null;
-                    Log.d(TAG, "Rewarded ad dismissed");
-                    // Load next ad automatically
-                    loadRewardedAd(activity, null);
-                }
+                                            public void onAdDismissedFullScreenContent() {
+                                rewardedAd = null;
+                                LogUtils.d(TAG, "Rewarded ad dismissed");
+                                // Load next ad automatically
+                                loadRewardedAd(activity, null);
+                            }
                 
                 @Override
-                public void onAdFailedToShowFullScreenContent(AdError adError) {
-                    rewardedAd = null;
-                    Log.e(TAG, "Rewarded ad failed to show: " + adError.getMessage());
-                }
+                                            public void onAdFailedToShowFullScreenContent(AdError adError) {
+                                rewardedAd = null;
+                                LogUtils.e(TAG, "Rewarded ad failed to show: " + adError.getMessage());
+                            }
                 
                 @Override
                 public void onAdShowedFullScreenContent() {
@@ -258,13 +259,13 @@ public class AdMobHelper {
             });
             
             rewardedAd.show(activity, rewardItem -> {
-                Log.d(TAG, "User earned reward: " + rewardItem.getAmount());
+                LogUtils.d(TAG, "User earned reward: " + rewardItem.getAmount());
                 if (callback != null) {
                     callback.onRewarded();
                 }
             });
         } else {
-            Log.d(TAG, "Rewarded ad not ready, loading...");
+            LogUtils.d(TAG, "Rewarded ad not ready, loading...");
             loadRewardedAd(activity, new AdLoadCallback() {
                 @Override
                 public void onAdLoaded() {
@@ -273,19 +274,19 @@ public class AdMobHelper {
                             @Override
                             public void onAdDismissedFullScreenContent() {
                                 rewardedAd = null;
-                                Log.d(TAG, "Rewarded ad dismissed");
+                                LogUtils.d(TAG, "Rewarded ad dismissed");
                                 loadRewardedAd(activity, null);
                             }
                             
                             @Override
                             public void onAdFailedToShowFullScreenContent(AdError adError) {
                                 rewardedAd = null;
-                                Log.e(TAG, "Rewarded ad failed to show: " + adError.getMessage());
+                                LogUtils.e(TAG, "Rewarded ad failed to show: " + adError.getMessage());
                             }
                             
                             @Override
                             public void onAdShowedFullScreenContent() {
-                                Log.d(TAG, "Rewarded ad showed full screen content");
+                                LogUtils.d(TAG, "Rewarded ad showed full screen content");
                             }
                         });
                         

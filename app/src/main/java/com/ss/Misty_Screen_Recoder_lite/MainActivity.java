@@ -66,7 +66,7 @@ import android.widget.AutoCompleteTextView;
 import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
-
+import com.ss.Misty_Screen_Recoder_lite.LogUtils;
 
 
 /**
@@ -218,30 +218,30 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
             if (hbRecorderCodecInfo.isMimeTypeSupported(mMimeType)) {
                 String defaultVideoEncoder = hbRecorderCodecInfo.getDefaultVideoEncoderName(mMimeType);
                 boolean isSizeAndFramerateSupported = hbRecorderCodecInfo.isSizeAndFramerateSupported(mWidth, mHeight, mFPS, mMimeType, ORIENTATION_PORTRAIT);
-                Log.e("EXAMPLE", "THIS IS AN EXAMPLE OF HOW TO USE THE (HBRecorderCodecInfo) TO GET CODEC INFO:");
-                Log.e("HBRecorderCodecInfo", "defaultVideoEncoder for (" + mMimeType + ") -> " + defaultVideoEncoder);
-                Log.e("HBRecorderCodecInfo", "MaxSupportedFrameRate -> " + hbRecorderCodecInfo.getMaxSupportedFrameRate(mWidth, mHeight, mMimeType));
-                Log.e("HBRecorderCodecInfo", "MaxSupportedBitrate -> " + hbRecorderCodecInfo.getMaxSupportedBitrate(mMimeType));
-                Log.e("HBRecorderCodecInfo", "isSizeAndFramerateSupported @ Width = "+mWidth+" Height = "+mHeight+" FPS = "+mFPS+" -> " + isSizeAndFramerateSupported);
-                Log.e("HBRecorderCodecInfo", "isSizeSupported @ Width = "+mWidth+" Height = "+mHeight+" -> " + hbRecorderCodecInfo.isSizeSupported(mWidth, mHeight, mMimeType));
-                Log.e("HBRecorderCodecInfo", "Default Video Format = " + hbRecorderCodecInfo.getDefaultVideoFormat());
+                LogUtils.e("EXAMPLE", "THIS IS AN EXAMPLE OF HOW TO USE THE (HBRecorderCodecInfo) TO GET CODEC INFO:");
+                LogUtils.e("HBRecorderCodecInfo", "defaultVideoEncoder for (" + mMimeType + ") -> " + defaultVideoEncoder);
+                LogUtils.e("HBRecorderCodecInfo", "MaxSupportedFrameRate -> " + hbRecorderCodecInfo.getMaxSupportedFrameRate(mWidth, mHeight, mMimeType));
+                LogUtils.e("HBRecorderCodecInfo", "MaxSupportedBitrate -> " + hbRecorderCodecInfo.getMaxSupportedBitrate(mMimeType));
+                LogUtils.e("HBRecorderCodecInfo", "isSizeAndFramerateSupported @ Width = "+mWidth+" Height = "+mHeight+" FPS = "+mFPS+" -> " + isSizeAndFramerateSupported);
+                LogUtils.e("HBRecorderCodecInfo", "isSizeSupported @ Width = "+mWidth+" Height = "+mHeight+" -> " + hbRecorderCodecInfo.isSizeSupported(mWidth, mHeight, mMimeType));
+                LogUtils.e("HBRecorderCodecInfo", "Default Video Format = " + hbRecorderCodecInfo.getDefaultVideoFormat());
 
                 HashMap<String, String> supportedVideoMimeTypes = hbRecorderCodecInfo.getSupportedVideoMimeTypes();
                 for (Map.Entry<String, String> entry : supportedVideoMimeTypes.entrySet()) {
-                    Log.e("HBRecorderCodecInfo", "Supported VIDEO encoders and mime types : " + entry.getKey() + " -> " + entry.getValue());
+                    LogUtils.e("HBRecorderCodecInfo", "Supported VIDEO encoders and mime types : " + entry.getKey() + " -> " + entry.getValue());
                 }
 
                 HashMap<String, String> supportedAudioMimeTypes = hbRecorderCodecInfo.getSupportedAudioMimeTypes();
                 for (Map.Entry<String, String> entry : supportedAudioMimeTypes.entrySet()) {
-                    Log.e("HBRecorderCodecInfo", "Supported AUDIO encoders and mime types : " + entry.getKey() + " -> " + entry.getValue());
+                    LogUtils.e("HBRecorderCodecInfo", "Supported AUDIO encoders and mime types : " + entry.getKey() + " -> " + entry.getValue());
                 }
 
                 ArrayList<String> supportedVideoFormats = hbRecorderCodecInfo.getSupportedVideoFormats();
                 for (int j = 0; j < supportedVideoFormats.size(); j++) {
-                    Log.e("HBRecorderCodecInfo", "Available Video Formats : " + supportedVideoFormats.get(j));
+                    LogUtils.e("HBRecorderCodecInfo", "Available Video Formats : " + supportedVideoFormats.get(j));
                 }
         } else {
-                Log.e("HBRecorderCodecInfo", "MimeType not supported");
+                LogUtils.e("HBRecorderCodecInfo", "MimeType not supported");
             }
     }
 
@@ -278,7 +278,7 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         File f1 = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES), "HBRecorder");
         if (!f1.exists()) {
             if (f1.mkdirs()) {
-                Log.i("Folder ", "created");
+                LogUtils.i("Folder ", "created");
             }
         }
     }
@@ -460,7 +460,7 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
     //Called when recording starts
     @Override
     public void HBRecorderOnStart() {
-        Log.e("HBRecorder", "HBRecorderOnStart called");
+        LogUtils.e("HBRecorder", "HBRecorderOnStart called");
     }
 
     //Listener for when the recording is saved successfully
@@ -498,7 +498,7 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
             showLongToast(getString(R.string.max_file_size_reached_message));
         } else {
             showLongToast(getString(R.string.general_recording_error_message));
-            Log.e("HBRecorderOnError", reason);
+            LogUtils.e("HBRecorderOnError", reason);
         }
 
         startbtn.setText(R.string.start_recording);
@@ -524,8 +524,8 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
                 new String[]{hbRecorder.getFilePath()}, null,
                 new MediaScannerConnection.OnScanCompletedListener() {
                     public void onScanCompleted(String path, Uri uri) {
-                        Log.i("ExternalStorage", "Scanned " + path + ":");
-                        Log.i("ExternalStorage", "-> uri=" + uri);
+                        LogUtils.i("ExternalStorage", "Scanned " + path + ":");
+                        LogUtils.i("ExternalStorage", "-> uri=" + uri);
                     }
                 });
     }
@@ -918,7 +918,7 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
                 @Override
                 public void onAdFailedToLoad(String error) {
                     // Ad failed to load, continue with recording anyway
-                    Log.d("MainActivity", "Interstitial ad failed to load: " + error);
+                    LogUtils.d("MainActivity", "Interstitial ad failed to load: " + error);
                 }
             });
         }
@@ -931,15 +931,15 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         // Check current system permission status using a more reliable method
         boolean hasOverlayPermission = checkOverlayPermission();
         
-        Log.d("MainActivity", "Checking overlay permission - canDrawOverlays: " + hasOverlayPermission);
-        Log.d("MainActivity", "Package name: " + getPackageName());
-        Log.d("MainActivity", "Android version: " + Build.VERSION.SDK_INT);
+        LogUtils.d("MainActivity", "Checking overlay permission - canDrawOverlays: " + hasOverlayPermission);
+        LogUtils.d("MainActivity", "Package name: " + getPackageName());
+        LogUtils.d("MainActivity", "Android version: " + Build.VERSION.SDK_INT);
         
         if (hasOverlayPermission) {
-            Log.d("MainActivity", "Overlay permission already granted, starting FloatingDockService");
+            LogUtils.d("MainActivity", "Overlay permission already granted, starting FloatingDockService");
             startService(new Intent(this, FloatingDockService.class));
         } else {
-            Log.d("MainActivity", "Overlay permission not granted, requesting permission");
+            LogUtils.d("MainActivity", "Overlay permission not granted, requesting permission");
             // Request overlay permission
             Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                 Uri.parse("package:" + getPackageName()));
@@ -965,10 +965,10 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
                         // If we can get the window manager, assume permission is granted
                         // This is a fallback method
                         canDrawOverlays = true;
-                        Log.d("MainActivity", "Using fallback method - window manager available");
+                        LogUtils.d("MainActivity", "Using fallback method - window manager available");
                     }
                 } catch (Exception e) {
-                    Log.e("MainActivity", "Error checking overlay permission: " + e.getMessage());
+                    LogUtils.e("MainActivity", "Error checking overlay permission: " + e.getMessage());
                     canDrawOverlays = false;
                 }
             }
@@ -986,11 +986,11 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
     private void testOverlayPermission() {
         boolean hasPermission = checkOverlayPermission();
         
-        Log.d("MainActivity", "=== OVERLAY PERMISSION TEST ===");
-        Log.d("MainActivity", "Package: " + getPackageName());
-        Log.d("MainActivity", "Has overlay permission: " + hasPermission);
-        Log.d("MainActivity", "Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT);
-        Log.d("MainActivity", "===============================");
+        LogUtils.d("MainActivity", "=== OVERLAY PERMISSION TEST ===");
+        LogUtils.d("MainActivity", "Package: " + getPackageName());
+        LogUtils.d("MainActivity", "Has overlay permission: " + hasPermission);
+        LogUtils.d("MainActivity", "Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT);
+        LogUtils.d("MainActivity", "===============================");
         
         if (hasPermission) {
             Toast.makeText(this, "Overlay permission is GRANTED", Toast.LENGTH_SHORT).show();

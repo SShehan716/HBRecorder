@@ -17,6 +17,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.Nullable;
 import android.widget.ImageView;
+import com.ss.Misty_Screen_Recoder_lite.LogUtils;
 
 public class FloatingDockService extends Service {
     private WindowManager windowManager;
@@ -33,7 +34,7 @@ public class FloatingDockService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d("FloatingDockService", "Service onCreate called");
+        LogUtils.d("FloatingDockService", "Service onCreate called");
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         addFloatingDock();
     }
@@ -141,7 +142,7 @@ public class FloatingDockService extends Service {
         recorderBar.setVisibility(View.GONE);
 
         windowManager.addView(floatingView, params);
-        Log.d("FloatingDockService", "Floating dock view added to window manager");
+        LogUtils.d("FloatingDockService", "Floating dock view added to window manager");
     }
 
     @Override

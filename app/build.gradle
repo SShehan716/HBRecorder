@@ -44,7 +44,7 @@ android {
     
     // Enable R8 for better code shrinking
     buildFeatures {
-        buildConfig false
+        buildConfig true  // Needed for LogUtils conditional compilation
     }
     
     namespace 'com.ss.Misty_Screen_Recoder_lite'
