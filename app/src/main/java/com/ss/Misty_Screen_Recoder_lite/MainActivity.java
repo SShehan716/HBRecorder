@@ -198,8 +198,16 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         // Set up fragments
         setupFragments();
 
-        // Initialize AdMob
+        // Initialize AdMob (lazy loading)
         initializeAds();
+        
+        // Preload ads after a delay to improve user experience
+        // This happens after the UI is ready and user can interact
+        new android.os.Handler().postDelayed(() -> {
+            if (adMobHelper != null) {
+                adMobHelper.preloadAds(this);
+            }
+        }, 2000); // 2 second delay
 
         // Examples of how to use the HBRecorderCodecInfo class to get codec info
         HBRecorderCodecInfo hbRecorderCodecInfo = new HBRecorderCodecInfo();
@@ -350,6 +358,10 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
                 return;
             }
                 if (!hbRecorder.isBusyRecording()) {
+                    // Preload interstitial ad when user starts recording process
+                    if (adMobHelper != null) {
+                        adMobHelper.loadInterstitialAd(this, null);
+                    }
                     startRecordingScreen();
                 } else {
                 isStopPending = true;
@@ -883,24 +895,32 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
     }
     
     /**
-     * Initialize AdMob ads
+     * Initialize AdMob ads (lazy loading)
      */
     private void initializeAds() {
         adMobHelper = new AdMobHelper();
         
-        // Load interstitial ad
-        adMobHelper.loadInterstitialAd(this);
-        
-        // Load rewarded ad
-        adMobHelper.loadRewardedAd(this);
+        // Don't load ads immediately - they will be loaded when needed
+        // This improves app startup time and reduces unnecessary network requests
     }
     
     /**
-     * Show interstitial ad when recording starts
+     * Show interstitial ad when recording starts (lazy loading)
      */
     private void showInterstitialAdOnRecordingStart() {
-        if (adMobHelper != null && adMobHelper.isInterstitialAdReady()) {
-            adMobHelper.showInterstitialAd(this);
+        if (adMobHelper != null) {
+            adMobHelper.showInterstitialAd(this, new AdMobHelper.AdLoadCallback() {
+                @Override
+                public void onAdLoaded() {
+                    // Ad was shown successfully
+                }
+                
+                @Override
+                public void onAdFailedToLoad(String error) {
+                    // Ad failed to load, continue with recording anyway
+                    Log.d("MainActivity", "Interstitial ad failed to load: " + error);
+                }
+            });
         }
     }
     
@@ -980,7 +1000,7 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
     }
     
     /**
-     * Show rewarded ad for premium features
+     * Show rewarded ad for premium features (lazy loading)
      */
     private void showRewardedAdForPremiumFeature() {
         if (adMobHelper != null) {
@@ -997,5 +1017,21 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
                 }
             });
         }
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Preload ads when app becomes active (user returns to app)
+        if (adMobHelper != null) {
+            adMobHelper.preloadAds(this);
+        }
+    }
+    
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Optional: Clean up ad resources when app goes to background
+        // This is handled automatically by the AdMob SDK
     }
 }

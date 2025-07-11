@@ -30,18 +30,34 @@ public class AdMobHelper {
     private RewardedAd rewardedAd;
     private boolean isLoadingInterstitial = false;
     private boolean isLoadingRewarded = false;
+    private boolean isSdkInitialized = false;
+    
+    // Callbacks for lazy loading
+    private AdLoadCallback interstitialLoadCallback;
+    private AdLoadCallback rewardedLoadCallback;
     
     public AdMobHelper() {
-        // Initialize MobileAds SDK
-        MobileAds.initialize(MyApplication.getInstance(), initializationStatus -> {
-            Log.d(TAG, "AdMob SDK initialized");
-        });
+        // Don't initialize ads automatically - lazy loading
     }
     
     /**
-     * Load banner ad
+     * Initialize AdMob SDK (called when first ad is needed)
+     */
+    private void initializeSdk(Context context) {
+        if (!isSdkInitialized) {
+            MobileAds.initialize(context, initializationStatus -> {
+                isSdkInitialized = true;
+                Log.d(TAG, "AdMob SDK initialized");
+            });
+        }
+    }
+    
+    /**
+     * Load banner ad (immediate loading for UI)
      */
     public void loadBannerAd(Context context, ViewGroup adContainer) {
+        initializeSdk(context);
+        
         AdView adView = new AdView(context);
         adView.setAdSize(AdSize.BANNER);
         adView.setAdUnitId(BANNER_AD_UNIT_ID);
@@ -58,12 +74,27 @@ public class AdMobHelper {
     }
     
     /**
-     * Load interstitial ad
+     * Load interstitial ad lazily (only when needed)
      */
-    public void loadInterstitialAd(Context context) {
-        if (isLoadingInterstitial) return;
+    public void loadInterstitialAd(Context context, AdLoadCallback callback) {
+        if (isLoadingInterstitial) {
+            // Already loading, store callback
+            interstitialLoadCallback = callback;
+            return;
+        }
         
+        if (interstitialAd != null) {
+            // Ad already loaded
+            if (callback != null) {
+                callback.onAdLoaded();
+            }
+            return;
+        }
+        
+        initializeSdk(context);
         isLoadingInterstitial = true;
+        interstitialLoadCallback = callback;
+        
         AdRequest adRequest = new AdRequest.Builder().build();
         
         InterstitialAd.load(context, INTERSTITIAL_AD_UNIT_ID, adRequest,
@@ -80,6 +111,8 @@ public class AdMobHelper {
                             public void onAdDismissedFullScreenContent() {
                                 interstitialAd = null;
                                 Log.d(TAG, "Interstitial ad dismissed");
+                                // Load next ad automatically
+                                loadInterstitialAd(context, null);
                             }
                             
                             @Override
@@ -93,6 +126,11 @@ public class AdMobHelper {
                                 Log.d(TAG, "Interstitial ad showed full screen content");
                             }
                         });
+                        
+                        if (interstitialLoadCallback != null) {
+                            interstitialLoadCallback.onAdLoaded();
+                            interstitialLoadCallback = null;
+                        }
                     }
                     
                     @Override
@@ -100,30 +138,69 @@ public class AdMobHelper {
                         interstitialAd = null;
                         isLoadingInterstitial = false;
                         Log.e(TAG, "Interstitial ad failed to load: " + loadAdError.getMessage());
+                        
+                        if (interstitialLoadCallback != null) {
+                            interstitialLoadCallback.onAdFailedToLoad(loadAdError.getMessage());
+                            interstitialLoadCallback = null;
+                        }
                     }
                 });
     }
     
     /**
-     * Show interstitial ad if available
+     * Show interstitial ad if available, otherwise load and show when ready
      */
-    public void showInterstitialAd(Activity activity) {
+    public void showInterstitialAd(Activity activity, AdLoadCallback callback) {
         if (interstitialAd != null) {
             interstitialAd.show(activity);
+            if (callback != null) {
+                callback.onAdLoaded();
+            }
         } else {
-            Log.d(TAG, "Interstitial ad not ready yet");
-            // Load a new ad for next time
-            loadInterstitialAd(activity);
+            Log.d(TAG, "Interstitial ad not ready, loading...");
+            loadInterstitialAd(activity, new AdLoadCallback() {
+                @Override
+                public void onAdLoaded() {
+                    if (interstitialAd != null) {
+                        interstitialAd.show(activity);
+                    }
+                    if (callback != null) {
+                        callback.onAdLoaded();
+                    }
+                }
+                
+                @Override
+                public void onAdFailedToLoad(String error) {
+                    if (callback != null) {
+                        callback.onAdFailedToLoad(error);
+                    }
+                }
+            });
         }
     }
     
     /**
-     * Load rewarded ad
+     * Load rewarded ad lazily (only when needed)
      */
-    public void loadRewardedAd(Context context) {
-        if (isLoadingRewarded) return;
+    public void loadRewardedAd(Context context, AdLoadCallback callback) {
+        if (isLoadingRewarded) {
+            // Already loading, store callback
+            rewardedLoadCallback = callback;
+            return;
+        }
         
+        if (rewardedAd != null) {
+            // Ad already loaded
+            if (callback != null) {
+                callback.onAdLoaded();
+            }
+            return;
+        }
+        
+        initializeSdk(context);
         isLoadingRewarded = true;
+        rewardedLoadCallback = callback;
+        
         AdRequest adRequest = new AdRequest.Builder().build();
         
         RewardedAd.load(context, REWARDED_AD_UNIT_ID, adRequest,
@@ -133,6 +210,11 @@ public class AdMobHelper {
                         rewardedAd = ad;
                         isLoadingRewarded = false;
                         Log.d(TAG, "Rewarded ad loaded");
+                        
+                        if (rewardedLoadCallback != null) {
+                            rewardedLoadCallback.onAdLoaded();
+                            rewardedLoadCallback = null;
+                        }
                     }
                     
                     @Override
@@ -140,12 +222,17 @@ public class AdMobHelper {
                         rewardedAd = null;
                         isLoadingRewarded = false;
                         Log.e(TAG, "Rewarded ad failed to load: " + loadAdError.getMessage());
+                        
+                        if (rewardedLoadCallback != null) {
+                            rewardedLoadCallback.onAdFailedToLoad(loadAdError.getMessage());
+                            rewardedLoadCallback = null;
+                        }
                     }
                 });
     }
     
     /**
-     * Show rewarded ad if available
+     * Show rewarded ad if available, otherwise load and show when ready
      */
     public void showRewardedAd(Activity activity, RewardedAdCallback callback) {
         if (rewardedAd != null) {
@@ -154,6 +241,8 @@ public class AdMobHelper {
                 public void onAdDismissedFullScreenContent() {
                     rewardedAd = null;
                     Log.d(TAG, "Rewarded ad dismissed");
+                    // Load next ad automatically
+                    loadRewardedAd(activity, null);
                 }
                 
                 @Override
@@ -175,12 +264,51 @@ public class AdMobHelper {
                 }
             });
         } else {
-            Log.d(TAG, "Rewarded ad not ready yet");
-            if (callback != null) {
-                callback.onAdNotAvailable();
-            }
-            // Load a new ad for next time
-            loadRewardedAd(activity);
+            Log.d(TAG, "Rewarded ad not ready, loading...");
+            loadRewardedAd(activity, new AdLoadCallback() {
+                @Override
+                public void onAdLoaded() {
+                    if (rewardedAd != null) {
+                        rewardedAd.setFullScreenContentCallback(new FullScreenContentCallback() {
+                            @Override
+                            public void onAdDismissedFullScreenContent() {
+                                rewardedAd = null;
+                                Log.d(TAG, "Rewarded ad dismissed");
+                                loadRewardedAd(activity, null);
+                            }
+                            
+                            @Override
+                            public void onAdFailedToShowFullScreenContent(AdError adError) {
+                                rewardedAd = null;
+                                Log.e(TAG, "Rewarded ad failed to show: " + adError.getMessage());
+                            }
+                            
+                            @Override
+                            public void onAdShowedFullScreenContent() {
+                                Log.d(TAG, "Rewarded ad showed full screen content");
+                            }
+                        });
+                        
+                        rewardedAd.show(activity, rewardItem -> {
+                            Log.d(TAG, "User earned reward: " + rewardItem.getAmount());
+                            if (callback != null) {
+                                callback.onRewarded();
+                            }
+                        });
+                    } else {
+                        if (callback != null) {
+                            callback.onAdNotAvailable();
+                        }
+                    }
+                }
+                
+                @Override
+                public void onAdFailedToLoad(String error) {
+                    if (callback != null) {
+                        callback.onAdNotAvailable();
+                    }
+                }
+            });
         }
     }
     
@@ -196,6 +324,33 @@ public class AdMobHelper {
      */
     public boolean isRewardedAdReady() {
         return rewardedAd != null;
+    }
+    
+    /**
+     * Preload ads for better user experience (call this when app is idle)
+     */
+    public void preloadAds(Context context) {
+        if (!isSdkInitialized) {
+            initializeSdk(context);
+        }
+        
+        // Preload interstitial ad
+        if (!isLoadingInterstitial && interstitialAd == null) {
+            loadInterstitialAd(context, null);
+        }
+        
+        // Preload rewarded ad
+        if (!isLoadingRewarded && rewardedAd == null) {
+            loadRewardedAd(context, null);
+        }
+    }
+    
+    /**
+     * Callback interface for ad loading
+     */
+    public interface AdLoadCallback {
+        void onAdLoaded();
+        void onAdFailedToLoad(String error);
     }
     
     /**
