@@ -201,9 +201,6 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         // Initialize AdMob
         initializeAds();
 
-        // Test overlay permission status
-        testOverlayPermission();
-
         // Examples of how to use the HBRecorderCodecInfo class to get codec info
         HBRecorderCodecInfo hbRecorderCodecInfo = new HBRecorderCodecInfo();
             int mWidth = hbRecorder.getDefaultWidth();
