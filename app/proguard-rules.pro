@@ -7,6 +7,12 @@
 
 # Keep HBRecorder classes
 -keep class com.hbisoft.hbrecorder.** { *; }
+-keep class com.hbisoft.hbrecorder.HBRecorder { *; }
+-keep class com.hbisoft.hbrecorder.HBRecorderCodecInfo { *; }
+-keep class com.hbisoft.hbrecorder.HBRecorderListener { *; }
+-dontwarn com.hbisoft.hbrecorder.HBRecorder
+-dontwarn com.hbisoft.hbrecorder.HBRecorderCodecInfo
+-dontwarn com.hbisoft.hbrecorder.HBRecorderListener
 
 # Keep AdMob classes
 -keep class com.google.android.gms.ads.** { *; }
