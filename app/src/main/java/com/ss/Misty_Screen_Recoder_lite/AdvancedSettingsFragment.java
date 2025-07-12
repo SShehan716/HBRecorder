@@ -8,12 +8,16 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.CheckBox;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.hbisoft.hbrecorder.HBRecorder;
+import com.hbisoft.hbrecorder.HBRecorderCodecInfo;
+
+import java.util.ArrayList;
 
 public class AdvancedSettingsFragment extends Fragment {
     private AutoCompleteTextView encoderDropdown;
@@ -61,37 +65,74 @@ public class AdvancedSettingsFragment extends Fragment {
     }
 
     private void setupDropdowns() {
-        // Video Encoder options
-        String[] encoders = {"H264", "H265"};
+        HBRecorderCodecInfo codecInfo = new HBRecorderCodecInfo();
+        codecInfo.setContext(requireContext());
+
+        ArrayList<String> supportedFormats = codecInfo.getSupportedVideoFormats();
+        if (supportedFormats == null || supportedFormats.isEmpty()) {
+            Toast.makeText(requireContext(), "No supported video codecs found. Screen recording is not supported on this device.", Toast.LENGTH_LONG).show();
+            // Optionally, disable the record button or settings here
+            return;
+        }
+
+        // Video Encoder options (by supported MIME types)
+        ArrayList<String> encoders = new ArrayList<>();
+        for (String format : supportedFormats) {
+            if (format.equals("MPEG_4")) encoders.add("H264");
+            if (format.equals("WEBM")) encoders.add("VP8");
+            if (format.equals("THREE_GPP")) encoders.add("H263");
+        }
+        if (encoders.isEmpty()) encoders.add("H264"); // fallback
         ArrayAdapter<String> encoderAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, encoders);
         encoderDropdown.setAdapter(encoderAdapter);
-        encoderDropdown.setText(encoders[0], false);
+        encoderDropdown.setText(encoders.get(0), false);
 
-        // Resolution options
-        String[] resolutions = {"720p", "1080p", "1440p", "2160p"};
-        ArrayAdapter<String> resolutionAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, resolutions);
-        resolutionDropdown.setAdapter(resolutionAdapter);
-        resolutionDropdown.setText(resolutions[0], false);
-
-        // Frame rate options
-        String[] framerates = {"24", "30", "60"};
-        ArrayAdapter<String> framerateAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, framerates);
-        framerateDropdown.setAdapter(framerateAdapter);
-        framerateDropdown.setText(framerates[1], false);
-
-        // Bitrate options
-        String[] bitrates = {"2 Mbps", "4 Mbps", "8 Mbps", "16 Mbps"};
-        ArrayAdapter<String> bitrateAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, bitrates);
-        bitrateDropdown.setAdapter(bitrateAdapter);
-        bitrateDropdown.setText(bitrates[1], false);
-
-        // Output format options
-        String[] formats = {"MPEG_4", "WEBM", "3GP"};
-        ArrayAdapter<String> formatAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, formats);
+        // Output format options (supported video formats)
+        ArrayAdapter<String> formatAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, supportedFormats);
         outputFormatDropdown.setAdapter(formatAdapter);
-        outputFormatDropdown.setText(formats[0], false);
+        outputFormatDropdown.setText(supportedFormats.get(0), false);
 
-        // Audio source options
+        // Resolution options (filter by isSizeSupported)
+        String[] allResolutions = {"720p", "1080p", "1440p", "2160p"};
+        ArrayList<String> supportedResolutions = new ArrayList<>();
+        for (String res : allResolutions) {
+            int w = 720, h = 1280;
+            if (res.equals("1080p")) { w = 1080; h = 1920; }
+            if (res.equals("1440p")) { w = 1440; h = 2560; }
+            if (res.equals("2160p")) { w = 2160; h = 3840; }
+            if (codecInfo.isSizeSupported(w, h, "video/mp4")) supportedResolutions.add(res);
+        }
+        if (supportedResolutions.isEmpty()) supportedResolutions.add("720p");
+        ArrayAdapter<String> resolutionAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, supportedResolutions);
+        resolutionDropdown.setAdapter(resolutionAdapter);
+        resolutionDropdown.setText(supportedResolutions.get(0), false);
+
+        // Frame rate options (filter by getMaxSupportedFrameRate)
+        String[] allFramerates = {"24", "30", "60"};
+        ArrayList<String> supportedFramerates = new ArrayList<>();
+        for (String fr : allFramerates) {
+            double maxFps = codecInfo.getMaxSupportedFrameRate(720, 1280, "video/mp4");
+            if (Double.parseDouble(fr) <= maxFps) supportedFramerates.add(fr);
+        }
+        if (supportedFramerates.isEmpty()) supportedFramerates.add("30");
+        ArrayAdapter<String> framerateAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, supportedFramerates);
+        framerateDropdown.setAdapter(framerateAdapter);
+        framerateDropdown.setText(supportedFramerates.get(0), false);
+
+        // Bitrate options (filter by getMaxSupportedBitrate)
+        String[] allBitrates = {"2 Mbps", "4 Mbps", "8 Mbps", "16 Mbps"};
+        ArrayList<String> supportedBitrates = new ArrayList<>();
+        int maxBitrate = codecInfo.getMaxSupportedBitrate("video/mp4");
+        for (String br : allBitrates) {
+            int val = Integer.parseInt(br.split(" ")[0]) * 1000000;
+            if (val <= maxBitrate) supportedBitrates.add(br);
+        }
+        if (supportedBitrates.isEmpty()) supportedBitrates.add("4 Mbps");
+        ArrayAdapter<String> bitrateAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, supportedBitrates);
+        bitrateDropdown.setAdapter(bitrateAdapter);
+        bitrateDropdown.setText(supportedBitrates.get(0), false);
+
+        // Audio source options (keep as is for now)
         String[] audioSources = {"System + Mic", "System", "Mic"};
         ArrayAdapter<String> audioSourceAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, audioSources);
         audioSourceDropdown.setAdapter(audioSourceAdapter);

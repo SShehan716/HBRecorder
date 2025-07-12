@@ -21,6 +21,8 @@ public class AdMobHelper {
     private InterstitialAd interstitialAd;
     private boolean isLoadingInterstitial = false;
     private boolean isSdkInitialized = false;
+    private int retryCount = 0;
+    private static final int MAX_RETRY_COUNT = 3;
     
     // Callback for lazy loading
     private AdLoadCallback interstitialLoadCallback;
@@ -37,12 +39,14 @@ public class AdMobHelper {
             MobileAds.initialize(context, initializationStatus -> {
                 isSdkInitialized = true;
                 LogUtils.d(TAG, "AdMob SDK initialized");
+                // Auto-load first ad after SDK initialization
+                loadInterstitialAd(context, null);
             });
         }
     }
     
     /**
-     * Load interstitial ad lazily (only when needed)
+     * Load interstitial ad with retry logic
      */
     public void loadInterstitialAd(Context context, AdLoadCallback callback) {
         if (isLoadingInterstitial) {
@@ -71,7 +75,8 @@ public class AdMobHelper {
                     public void onAdLoaded(InterstitialAd ad) {
                         interstitialAd = ad;
                         isLoadingInterstitial = false;
-                        LogUtils.d(TAG, "Interstitial ad loaded");
+                        retryCount = 0; // Reset retry count on success
+                        LogUtils.d(TAG, "Interstitial ad loaded successfully");
                         
                         // Set full screen content callback
                         interstitialAd.setFullScreenContentCallback(new FullScreenContentCallback() {
@@ -79,7 +84,7 @@ public class AdMobHelper {
                             public void onAdDismissedFullScreenContent() {
                                 interstitialAd = null;
                                 LogUtils.d(TAG, "Interstitial ad dismissed");
-                                // Load next ad automatically
+                                // Load next ad automatically after a short delay
                                 loadInterstitialAd(context, null);
                             }
                             
@@ -87,6 +92,8 @@ public class AdMobHelper {
                             public void onAdFailedToShowFullScreenContent(AdError adError) {
                                 interstitialAd = null;
                                 LogUtils.e(TAG, "Interstitial ad failed to show: " + adError.getMessage());
+                                // Retry loading after failure
+                                loadInterstitialAd(context, null);
                             }
                             
                             @Override
@@ -107,9 +114,20 @@ public class AdMobHelper {
                         isLoadingInterstitial = false;
                         LogUtils.e(TAG, "Interstitial ad failed to load: " + loadAdError.getMessage());
                         
-                        if (interstitialLoadCallback != null) {
-                            interstitialLoadCallback.onAdFailedToLoad(loadAdError.getMessage());
-                            interstitialLoadCallback = null;
+                        // Retry logic for failed loads
+                        if (retryCount < MAX_RETRY_COUNT) {
+                            retryCount++;
+                            LogUtils.d(TAG, "Retrying ad load, attempt " + retryCount + "/" + MAX_RETRY_COUNT);
+                            // Retry after a short delay
+                            new android.os.Handler().postDelayed(() -> {
+                                loadInterstitialAd(context, interstitialLoadCallback);
+                            }, 2000); // 2 second delay
+                        } else {
+                            retryCount = 0; // Reset for next time
+                            if (interstitialLoadCallback != null) {
+                                interstitialLoadCallback.onAdFailedToLoad(loadAdError.getMessage());
+                                interstitialLoadCallback = null;
+                            }
                         }
                     }
                 });
@@ -139,6 +157,7 @@ public class AdMobHelper {
                 
                 @Override
                 public void onAdFailedToLoad(String error) {
+                    LogUtils.e(TAG, "Failed to load ad for showing: " + error);
                     if (callback != null) {
                         callback.onAdFailedToLoad(error);
                     }
@@ -159,7 +178,9 @@ public class AdMobHelper {
      */
     public void preloadAds(Context context) {
         // Load interstitial ad in background
-        loadInterstitialAd(context, null);
+        if (interstitialAd == null && !isLoadingInterstitial) {
+            loadInterstitialAd(context, null);
+        }
     }
     
     /**
