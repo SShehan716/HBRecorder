@@ -203,6 +203,9 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         // Initialize AdMob (lazy loading)
         initializeAds();
         
+        // Check overlay permission on app start
+        checkOverlayPermissionOnStart();
+        
         // Preload ads after a delay to improve user experience
         // This happens after the UI is ready and user can interact
         new android.os.Handler().postDelayed(() -> {
@@ -1005,6 +1008,12 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
     }
 
     private void startScreenRecording() {
+        // Check overlay permission before starting recording
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+            showOverlayPermissionDialog();
+            return;
+        }
+        
         MediaProjectionManager mediaProjectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
         Intent permissionIntent = mediaProjectionManager.createScreenCaptureIntent();
         startActivityForResult(permissionIntent, SCREEN_RECORD_REQUEST_CODE);
@@ -1075,13 +1084,32 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
             LogUtils.d("MainActivity", "Overlay permission already granted, starting FloatingDockService");
             startService(new Intent(this, FloatingDockService.class));
         } else {
-            LogUtils.d("MainActivity", "Overlay permission not granted, requesting permission");
-            // Request overlay permission
-            Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                Uri.parse("package:" + getPackageName()));
-            startActivityForResult(intent, OVERLAY_PERMISSION_REQUEST_CODE);
-            Toast.makeText(this, "Please grant overlay permission to show the floating dock.", Toast.LENGTH_LONG).show();
+            LogUtils.d("MainActivity", "Overlay permission not granted, showing permission dialog");
+            showOverlayPermissionDialog();
         }
+    }
+    
+    /**
+     * Show dialog to request overlay permission
+     */
+    private void showOverlayPermissionDialog() {
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(this);
+        builder.setTitle("Permission Required")
+               .setMessage("This app needs 'Display over other apps' permission to show the floating recording controls. Please enable this permission to use all features.")
+               .setCancelable(false)
+               .setPositiveButton("Enable Permission", (dialog, which) -> {
+                   // Open settings to enable overlay permission
+                   Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                       Uri.parse("package:" + getPackageName()));
+                   startActivityForResult(intent, OVERLAY_PERMISSION_REQUEST_CODE);
+               })
+               .setNegativeButton("Cancel", (dialog, which) -> {
+                   dialog.dismiss();
+                   Toast.makeText(this, "Some features may not work without overlay permission", Toast.LENGTH_LONG).show();
+               });
+        
+        androidx.appcompat.app.AlertDialog dialog = builder.create();
+        dialog.show();
     }
     
     /**
@@ -1132,6 +1160,20 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
             Toast.makeText(this, "Overlay permission is GRANTED", Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(this, "Overlay permission is NOT GRANTED", Toast.LENGTH_SHORT).show();
+        }
+    }
+    
+    /**
+     * Check overlay permission when app starts
+     */
+    private void checkOverlayPermissionOnStart() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.canDrawOverlays(this)) {
+                // Show dialog after a short delay to let the app fully load
+                new android.os.Handler().postDelayed(() -> {
+                    showOverlayPermissionDialog();
+                }, 1000); // 1 second delay
+            }
         }
     }
     
