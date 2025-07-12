@@ -224,6 +224,11 @@ public class AdvancedSettingsFragment extends Fragment {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && hbRecorder != null) {
                 hbRecorder.isAudioEnabled(isChecked);
                 notifySettingsChanged();
+                
+                // Notify main activity to update its state
+                if (getActivity() instanceof MainActivity) {
+                    ((MainActivity) getActivity()).updateAudioState(isChecked);
+                }
             }
         });
     }

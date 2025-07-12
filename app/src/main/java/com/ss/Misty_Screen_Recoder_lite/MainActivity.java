@@ -415,6 +415,10 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
             isAudioEnabled = isChecked;
             saveAudioPreference(isChecked);
             saveSettings();
+            // Update HBRecorder immediately
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                hbRecorder.isAudioEnabled(isChecked);
+            }
         });
 
         encoderDropdown.setOnItemClickListener((parent, view, position, id) -> {
@@ -427,19 +431,9 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         resolutionDropdown.setOnItemClickListener((parent, view, position, id) -> {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 String resolution = resolutionDropdown.getText().toString();
-                switch (resolution) {
-                    case "720p":
-                        hbRecorder.setScreenDimensions(720, 1280);
-                        break;
-                    case "1080p":
-                        hbRecorder.setScreenDimensions(1080, 1920);
-                        break;
-                    case "1440p":
-                        hbRecorder.setScreenDimensions(1440, 2560);
-                        break;
-                    case "2160p":
-                        hbRecorder.setScreenDimensions(2160, 3840);
-                        break;
+                String[] dimensions = resolution.split("x");
+                if (dimensions.length == 2) {
+                    hbRecorder.setScreenDimensions(Integer.parseInt(dimensions[0]), Integer.parseInt(dimensions[1]));
                 }
                 saveSettings();
             }
@@ -447,7 +441,9 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
 
         framerateDropdown.setOnItemClickListener((parent, view, position, id) -> {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                hbRecorder.setVideoFrameRate(Integer.parseInt(framerateDropdown.getText().toString()));
+                String framerate = framerateDropdown.getText().toString();
+                int fps = Integer.parseInt(framerate.split(" ")[0]);
+                hbRecorder.setVideoFrameRate(fps);
                 saveSettings();
             }
         });
@@ -455,8 +451,10 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         bitrateDropdown.setOnItemClickListener((parent, view, position, id) -> {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 String bitrate = bitrateDropdown.getText().toString();
-                int bitrateValue = Integer.parseInt(bitrate.split(" ")[0]) * 1000000;
-                hbRecorder.setVideoBitrate(bitrateValue);
+                if (!bitrate.equals("Auto")) {
+                    int bitrateValue = Integer.parseInt(bitrate.split(" ")[0]) * 1000000;
+                    hbRecorder.setVideoBitrate(bitrateValue);
+                }
                 saveSettings();
             }
         });
@@ -960,7 +958,18 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
 
         // Load and set audio enabled state
         boolean savedAudioEnabled = preferences.getBoolean(KEY_AUDIO_ENABLED, true);
+        isAudioEnabled = savedAudioEnabled; // Update the main variable
         advancedAudioSwitch.setChecked(savedAudioEnabled);
+        
+        // Sync with Quick Settings fragment
+        if (quickSettingsFragment != null) {
+            quickSettingsFragment.setAudioEnabled(savedAudioEnabled);
+        }
+        
+        // Apply to HBRecorder
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && hbRecorder != null) {
+            hbRecorder.isAudioEnabled(savedAudioEnabled);
+        }
     }
 
     private void setupFragments() {
@@ -968,6 +977,7 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         quickSettingsFragment.setOnSettingsChangedListener(new QuickSettingsFragment.OnSettingsChangedListener() {
             @Override
             public void onQualityChanged(boolean isHD) {
+                wasHDSelected = isHD;
                 if (isHD) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         hbRecorder.setScreenDimensions(1080, 1920);
@@ -987,9 +997,16 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
 
             @Override
             public void onAudioChanged(boolean isEnabled) {
+                isAudioEnabled = isEnabled;
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     hbRecorder.isAudioEnabled(isEnabled);
                 }
+                // Sync with Advanced Settings
+                if (advancedAudioSwitch != null) {
+                    advancedAudioSwitch.setChecked(isEnabled);
+                }
+                saveAudioPreference(isEnabled);
+                saveSettings();
             }
         });
 
@@ -1191,5 +1208,19 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         super.onPause();
         // Optional: Clean up ad resources when app goes to background
         // This is handled automatically by the AdMob SDK
+    }
+
+    /**
+     * Update audio state from Advanced Settings fragment
+     */
+    public void updateAudioState(boolean isEnabled) {
+        isAudioEnabled = isEnabled;
+        saveAudioPreference(isEnabled);
+        saveSettings();
+        
+        // Sync with Quick Settings if available
+        if (quickSettingsFragment != null) {
+            quickSettingsFragment.setAudioEnabled(isEnabled);
+        }
     }
 }
