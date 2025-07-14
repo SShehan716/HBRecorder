@@ -195,3 +195,4 @@ Any disputes regarding this Privacy Policy will be resolved through courts in Sr
 **This Privacy Policy is effective as of 12/07/2025 and applies to all users of Misty Screen Recorder (Lite).**
 
 ---
+ 

@@ -152,7 +152,7 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
     private TabLayout tabLayout;
     private QuickSettingsFragment quickSettingsFragment;
     private AdvancedSettingsFragment advancedSettingsFragment;
-    
+
     // AdMob components
     private AdMobHelper adMobHelper;
 
@@ -247,7 +247,7 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
                 }
         } else {
                 LogUtils.e("HBRecorderCodecInfo", "MimeType not supported");
-            }
+        }
     }
 
     private void requestNotificationPermission() {
@@ -452,8 +452,8 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 String bitrate = bitrateDropdown.getText().toString();
                 if (!bitrate.equals("Auto")) {
-                    int bitrateValue = Integer.parseInt(bitrate.split(" ")[0]) * 1000000;
-                    hbRecorder.setVideoBitrate(bitrateValue);
+                int bitrateValue = Integer.parseInt(bitrate.split(" ")[0]) * 1000000;
+                hbRecorder.setVideoBitrate(bitrateValue);
                 }
                 saveSettings();
             }
@@ -797,13 +797,13 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == SCREEN_RECORD_REQUEST_CODE) {
-            if (resultCode == RESULT_OK) {
+            if (requestCode == SCREEN_RECORD_REQUEST_CODE) {
+                if (resultCode == RESULT_OK) {
                 // Apply settings based on current tab before starting recording
                 applySettingsBasedOnCurrentTab();
                 
-                setOutputPath();
-                hbRecorder.startScreenRecording(data, resultCode);
+                    setOutputPath();
+                    hbRecorder.startScreenRecording(data, resultCode);
                 startbtn.setText(R.string.stop_recording);
                 
                 // Show interstitial ad when recording starts
@@ -812,8 +812,8 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
                 // Check current system permission status and start floating dock
                 checkAndStartFloatingDock();
             } else {
-                startbtn.setText(R.string.start_recording);
-            }
+                    startbtn.setText(R.string.start_recording);
+                }
         } else if (requestCode == OVERLAY_PERMISSION_REQUEST_CODE) {
             // User returned from overlay permission screen - check current system status
             checkAndStartFloatingDock();
@@ -830,7 +830,7 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
             // Quick Settings tab is active
             LogUtils.d("MainActivity", "Applying Quick Settings");
             quickSettings();
-        } else {
+            } else {
             // Advanced Settings tab is active
             LogUtils.d("MainActivity", "Applying Advanced Settings");
             customSettings();

@@ -12,7 +12,7 @@
             android:summary="Grant permission to show floating dock while recording"
             android:title="Floating Dock Permission" />
     </PreferenceCategory>
-    
+
     <PreferenceCategory android:title="Legal &amp; Support">
         <androidx.preference.Preference
             android:key="key_privacy_policy"
