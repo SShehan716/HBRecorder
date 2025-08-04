@@ -197,11 +197,11 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
                 (tab, position) -> tab.setText(position == 0 ? "Quick" : "Advanced")
         ).attach();
 
+        // Initialize AdMob (lazy loading) - MUST be before setupFragments
+        initializeAds();
+
         // Set up fragments
         setupFragments();
-
-        // Initialize AdMob (lazy loading)
-        initializeAds();
         
         // Check overlay permission on app start
         checkOverlayPermissionOnStart();
@@ -399,10 +399,6 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
                 return;
             }
                 if (!hbRecorder.isBusyRecording()) {
-                    // Preload interstitial ad when user starts recording process
-                    if (adMobHelper != null) {
-                        adMobHelper.loadInterstitialAd(this, null);
-                    }
                     startRecordingScreen();
                 } else {
                 isStopPending = true;
@@ -802,15 +798,12 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
                 // Apply settings based on current tab before starting recording
                 applySettingsBasedOnCurrentTab();
                 
-                    setOutputPath();
-                    hbRecorder.startScreenRecording(data, resultCode);
-                startbtn.setText(R.string.stop_recording);
-                
-                // Show interstitial ad when recording starts
-                showInterstitialAdOnRecordingStart();
-                
-                // Check current system permission status and start floating dock
-                checkAndStartFloatingDock();
+                                    setOutputPath();
+                hbRecorder.startScreenRecording(data, resultCode);
+            startbtn.setText(R.string.stop_recording);
+            
+            // Check current system permission status and start floating dock
+            checkAndStartFloatingDock();
             } else {
                     startbtn.setText(R.string.start_recording);
                 }
@@ -1008,6 +1001,28 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
                 saveAudioPreference(isEnabled);
                 saveSettings();
             }
+
+            @Override
+            public void onAudioUnlocked() {
+                // Audio feature was unlocked via rewarded ad
+                // Update advanced settings audio switch
+                if (advancedAudioSwitch != null) {
+                    advancedAudioSwitch.setEnabled(true);
+                    advancedAudioSwitch.setAlpha(1.0f);
+                }
+                // Enable audio recording by default when unlocked
+                isAudioEnabled = true;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    hbRecorder.isAudioEnabled(true);
+                }
+                saveAudioPreference(true);
+                saveSettings();
+                
+                // Refresh advanced settings audio controls
+                if (advancedSettingsFragment != null) {
+                    advancedSettingsFragment.refreshAudioControlsState();
+                }
+            }
         });
 
         // Set up AdvancedSettingsFragment
@@ -1015,6 +1030,9 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         advancedSettingsFragment.setOnSettingsChangedListener(() -> {
             // Settings have been changed, update UI if needed
         });
+
+        // Pass AdMob helper to QuickSettingsFragment for rewarded ads
+        quickSettingsFragment.setAdMobHelper(adMobHelper);
     }
 
     private void startRecording() {
@@ -1042,49 +1060,11 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
     private void initializeAds() {
         adMobHelper = new AdMobHelper();
         
-        // Preload ads immediately for better user experience
+        // Preload rewarded ads for better user experience
         adMobHelper.preloadAds(this);
     }
     
-    /**
-     * Show interstitial ad when recording starts (lazy loading)
-     */
-    private void showInterstitialAdOnRecordingStart() {
-        if (adMobHelper != null) {
-            // Check if ad is ready first
-            if (adMobHelper.isInterstitialAdReady()) {
-                adMobHelper.showInterstitialAd(this, new AdMobHelper.AdLoadCallback() {
-                    @Override
-                    public void onAdLoaded() {
-                        // Ad was shown successfully
-                        LogUtils.d("MainActivity", "Interstitial ad shown successfully");
-                    }
-                    
-                    @Override
-                    public void onAdFailedToLoad(String error) {
-                        // Ad failed to load, continue with recording anyway
-                        LogUtils.d("MainActivity", "Interstitial ad failed to load: " + error);
-                    }
-                });
-            } else {
-                // Ad not ready, try to load and show
-                LogUtils.d("MainActivity", "Ad not ready, loading and showing...");
-                adMobHelper.showInterstitialAd(this, new AdMobHelper.AdLoadCallback() {
-                    @Override
-                    public void onAdLoaded() {
-                        // Ad was shown successfully
-                        LogUtils.d("MainActivity", "Interstitial ad loaded and shown");
-                    }
-                    
-                    @Override
-                    public void onAdFailedToLoad(String error) {
-                        // Ad failed to load, continue with recording anyway
-                        LogUtils.d("MainActivity", "Interstitial ad failed to load: " + error);
-                    }
-                });
-            }
-        }
-    }
+
     
     /**
      * Check system permission status and start floating dock accordingly
@@ -1222,5 +1202,9 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         if (quickSettingsFragment != null) {
             quickSettingsFragment.setAudioEnabled(isEnabled);
         }
+    }
+
+    public boolean isAudioUnlocked() {
+        return quickSettingsFragment != null && quickSettingsFragment.isAudioUnlocked();
     }
 }

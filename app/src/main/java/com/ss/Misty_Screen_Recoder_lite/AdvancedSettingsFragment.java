@@ -8,6 +8,8 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.CheckBox;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -29,6 +31,9 @@ public class AdvancedSettingsFragment extends Fragment {
     private CheckBox audioCheckbox;
     private OnSettingsChangedListener listener;
     private HBRecorder hbRecorder;
+    private ImageView advancedAudioLockIcon;
+    private TextView audioLockedMessage;
+    private com.google.android.material.textfield.TextInputLayout audioSourceContainer;
 
     public interface OnSettingsChangedListener {
         void onSettingsChanged();
@@ -59,9 +64,13 @@ public class AdvancedSettingsFragment extends Fragment {
         outputFormatDropdown = view.findViewById(R.id.output_format_dropdown);
         audioSourceDropdown = view.findViewById(R.id.audio_source_dropdown);
         audioCheckbox = view.findViewById(R.id.advanced_audio_checkbox);
+        advancedAudioLockIcon = view.findViewById(R.id.advanced_audio_lock_icon);
+        audioLockedMessage = view.findViewById(R.id.audio_locked_message);
+        audioSourceContainer = view.findViewById(R.id.audio_source_container);
 
         setupDropdowns();
         setupListeners();
+        updateAudioControlsState();
     }
 
     private void setupDropdowns() {
@@ -248,5 +257,44 @@ public class AdvancedSettingsFragment extends Fragment {
         outputFormatDropdown.setText(outputFormat, false);
         audioSourceDropdown.setText(audioSource, false);
         audioCheckbox.setChecked(audioEnabled);
+    }
+
+    public void refreshAudioControlsState() {
+        updateAudioControlsState();
+    }
+
+    private void updateAudioControlsState() {
+        boolean isAudioUnlocked = ((MainActivity) requireActivity()).isAudioUnlocked();
+        
+        if (!isAudioUnlocked) {
+            // Audio feature is locked
+            audioCheckbox.setEnabled(false);
+            audioCheckbox.setChecked(false);
+            audioCheckbox.setText("Audio Recording Locked");
+            audioCheckbox.setClickable(false);
+            audioCheckbox.setFocusable(false);
+            audioCheckbox.setAlpha(0.5f);
+            
+            // Show lock icon and message
+            advancedAudioLockIcon.setVisibility(View.VISIBLE);
+            audioLockedMessage.setVisibility(View.VISIBLE);
+            audioSourceContainer.setEnabled(false);
+            audioSourceDropdown.setEnabled(false);
+            audioSourceDropdown.setAlpha(0.5f);
+        } else {
+            // Audio feature is unlocked
+            audioCheckbox.setEnabled(true);
+            audioCheckbox.setText("Record Audio");
+            audioCheckbox.setClickable(true);
+            audioCheckbox.setFocusable(true);
+            audioCheckbox.setAlpha(1.0f);
+            
+            // Hide lock icon and message
+            advancedAudioLockIcon.setVisibility(View.GONE);
+            audioLockedMessage.setVisibility(View.GONE);
+            audioSourceContainer.setEnabled(true);
+            audioSourceDropdown.setEnabled(true);
+            audioSourceDropdown.setAlpha(1.0f);
+        }
     }
 } 

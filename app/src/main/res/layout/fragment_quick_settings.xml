@@ -56,13 +56,77 @@
 
                 </com.google.android.material.chip.ChipGroup>
 
+            </LinearLayout>
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Audio Recording Feature Card -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="12dp"
+            app:cardElevation="2dp"
+            android:layout_marginTop="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Record Audio"
+                        android:textSize="16sp"
+                        android:textColor="@color/text_primary"
+                        android:textStyle="bold"/>
+
+                    <ImageView
+                        android:id="@+id/audio_lock_icon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_lock"
+                        android:contentDescription="Audio feature locked"
+                        android:tint="@color/gray"/>
+
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Watch a short video to unlock audio recording feature"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginBottom="16dp"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/unlock_audio_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Watch Video to Unlock"
+                    android:textAllCaps="false"
+                    app:icon="@drawable/ic_play_circle"
+                    app:iconGravity="textStart"
+                    style="@style/Widget.MaterialComponents.Button"/>
+
                 <CheckBox
                     android:id="@+id/audio_checkbox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Record Audio"
-                    android:checked="true"
-                    android:layout_marginTop="16dp"/>
+                    android:checked="false"
+                    android:enabled="false"
+                    android:layout_marginTop="12dp"
+                    android:alpha="0.5"/>
 
             </LinearLayout>
 

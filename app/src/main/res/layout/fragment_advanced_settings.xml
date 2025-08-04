@@ -121,14 +121,43 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Audio Settings"
-                    android:textAppearance="?attr/textAppearanceHeadline6"
-                    android:layout_marginBottom="16dp"/>
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="16dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Audio Settings"
+                        android:textAppearance="?attr/textAppearanceHeadline6"/>
+
+                    <ImageView
+                        android:id="@+id/advanced_audio_lock_icon"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_lock"
+                        android:contentDescription="Audio feature locked"
+                        android:tint="@color/gray"
+                        android:visibility="gone"/>
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/audio_locked_message"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Audio recording feature is locked. Unlock it in Quick Settings to access advanced audio controls."
+                    android:textSize="14sp"
+                    android:textColor="@color/text_secondary"
+                    android:layout_marginBottom="16dp"
+                    android:visibility="gone"/>
 
                 <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/audio_source_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="8dp"
@@ -148,7 +177,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Record Audio"
-                    android:checked="true"/>
+                    android:checked="false"/>
 
             </LinearLayout>
 
