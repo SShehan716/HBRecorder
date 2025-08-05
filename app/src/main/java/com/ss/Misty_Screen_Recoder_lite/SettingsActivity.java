@@ -32,7 +32,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     public static class MainPreferenceFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener{
         ListPreference key_video_resolution, key_audio_source, key_video_encoder, key_video_fps, key_video_bitrate, key_output_format;
-        SwitchPreference key_record_audio, key_dark_mode;
+        SwitchPreference key_record_audio, key_dark_mode, key_floating_dock_enabled;
         Preference key_floating_dock_permission, key_privacy_policy;
 
         @Override
@@ -42,11 +42,17 @@ public class SettingsActivity extends AppCompatActivity {
 
             // Initialize new preferences
             key_dark_mode = findPreference("key_dark_mode");
+            key_floating_dock_enabled = findPreference("key_floating_dock_enabled");
             key_floating_dock_permission = findPreference("key_floating_dock_permission");
 
             // Set up dark mode preference
             if (key_dark_mode != null) {
                 key_dark_mode.setOnPreferenceChangeListener(this);
+            }
+
+            // Set up floating dock enabled preference
+            if (key_floating_dock_enabled != null) {
+                key_floating_dock_enabled.setOnPreferenceChangeListener(this);
             }
 
             // Set up floating dock permission preference
@@ -118,6 +124,37 @@ public class SettingsActivity extends AppCompatActivity {
                 editor.apply();
                 // Recreate the activity to apply the theme
                 requireActivity().recreate();
+                return true;
+            }
+            
+            if ("key_floating_dock_enabled".equals(preferenceKey)) {
+                boolean isFloatingDockEnabled = (Boolean) newValue;
+                // Save the preference
+                SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(requireContext()).edit();
+                editor.putBoolean("key_floating_dock_enabled", isFloatingDockEnabled);
+                editor.apply();
+                
+                // Stop floating dock service if disabled
+                if (!isFloatingDockEnabled) {
+                    Intent serviceIntent = new Intent(requireContext(), FloatingDockService.class);
+                    requireContext().stopService(serviceIntent);
+                }
+                
+                // Update summary
+                if (key_floating_dock_enabled != null) {
+                    if (isFloatingDockEnabled) {
+                        key_floating_dock_enabled.setSummary("Floating dock controls will be shown while recording");
+                    } else {
+                        key_floating_dock_enabled.setSummary("Floating dock controls are disabled");
+                    }
+                }
+                
+                // Show feedback to user
+                if (isFloatingDockEnabled) {
+                    Toast.makeText(requireContext(), "Floating dock enabled", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(requireContext(), "Floating dock disabled", Toast.LENGTH_SHORT).show();
+                }
                 return true;
             }
             
@@ -198,26 +235,37 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         private void setPreviousSelectedAsSummary() {
-            if (getActivity() != null) {
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-                String video_resolution = prefs.getString("key_video_resolution", null);
-                boolean audio_enabled = prefs.getBoolean("key_record_audio", true);
-                String audio_source = prefs.getString("key_audio_source", null);
-                String video_encoder = prefs.getString("key_video_encoder", null);
-                String video_frame_rate = prefs.getString("key_video_fps", null);
-                String video_bit_rate = prefs.getString("key_video_bitrate", null);
-                String output_format = prefs.getString("key_output_format", null);
-                boolean dark_mode = prefs.getBoolean("key_dark_mode", false);
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
+            String audio_source = prefs.getString("key_audio_source", null);
+            String video_encoder = prefs.getString("key_video_encoder", null);
+            String video_resolution = prefs.getString("key_video_resolution", null);
+            String video_fps = prefs.getString("key_video_fps", null);
+            String video_bitrate = prefs.getString("key_video_bitrate", null);
+            String output_format = prefs.getString("key_output_format", null);
+            boolean dark_mode = prefs.getBoolean("key_dark_mode", false);
+            boolean floating_dock_enabled = prefs.getBoolean("key_floating_dock_enabled", true);
 
-                /*Dark Mode Prefs*/
-                if (key_dark_mode != null) {
-                    key_dark_mode.setChecked(dark_mode);
-                }
+            /*Dark Mode Prefs*/
+            if (key_dark_mode != null) {
+                key_dark_mode.setChecked(dark_mode);
+            }
 
-                /*Record Audio Prefs*/
-                if (key_record_audio != null) {
-                    key_record_audio.setChecked(audio_enabled);
+            /*Record Audio Prefs*/
+            boolean audio_enabled = prefs.getBoolean("key_record_audio", false);
+            if (key_record_audio != null) {
+                key_record_audio.setChecked(audio_enabled);
+            }
+
+            /*Floating Dock Enabled Prefs*/
+            if (key_floating_dock_enabled != null) {
+                key_floating_dock_enabled.setChecked(floating_dock_enabled);
+                // Update summary based on current state
+                if (floating_dock_enabled) {
+                    key_floating_dock_enabled.setSummary("Floating dock controls will be shown while recording");
+                } else {
+                    key_floating_dock_enabled.setSummary("Floating dock controls are disabled");
                 }
+            }
 
                 /*Audio Source Prefs*/
                 if (audio_source != null && key_audio_source != null) {
@@ -250,8 +298,8 @@ public class SettingsActivity extends AppCompatActivity {
                 }
 
                 /*Video Frame Rate Prefs*/
-                if (video_frame_rate != null && key_video_fps != null) {
-                    int index = key_video_fps.findIndexOfValue(video_frame_rate);
+                if (video_fps != null && key_video_fps != null) {
+                    int index = key_video_fps.findIndexOfValue(video_fps);
                     key_video_fps.setSummary(key_video_fps.getEntries()[index]);
 
                 } else if (key_video_fps != null) {
@@ -260,8 +308,8 @@ public class SettingsActivity extends AppCompatActivity {
                 }
 
                 /*Video Bit Rate Prefs*/
-                if (video_bit_rate != null && key_video_bitrate != null) {
-                    int index = key_video_bitrate.findIndexOfValue(video_bit_rate);
+                if (video_bitrate != null && key_video_bitrate != null) {
+                    int index = key_video_bitrate.findIndexOfValue(video_bitrate);
                     key_video_bitrate.setSummary(key_video_bitrate.getEntries()[index]);
 
                 } else if (key_video_bitrate != null) {
@@ -282,7 +330,6 @@ public class SettingsActivity extends AppCompatActivity {
             }
 
         }
-    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -291,5 +338,4 @@ public class SettingsActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
-
 }

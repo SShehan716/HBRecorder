@@ -67,6 +67,7 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.ss.Misty_Screen_Recoder_lite.LogUtils;
+import com.ss.Misty_Screen_Recoder_lite.SettingsActivity;
 
 
 /**
@@ -1071,6 +1072,15 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
      * Check system permission status and start floating dock accordingly
      */
     private void checkAndStartFloatingDock() {
+        // Check if floating dock is enabled in settings
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean isFloatingDockEnabled = prefs.getBoolean("key_floating_dock_enabled", true); // Default to true
+        
+        if (!isFloatingDockEnabled) {
+            LogUtils.d("MainActivity", "Floating dock is disabled in settings");
+            return;
+        }
+        
         // Check current system permission status using a more reliable method
         boolean hasOverlayPermission = checkOverlayPermission();
         
@@ -1226,5 +1236,22 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
             return true;
         }
         return false;
+    }
+
+    /**
+     * Stop floating dock service if running
+     */
+    private void stopFloatingDock() {
+        Intent serviceIntent = new Intent(this, FloatingDockService.class);
+        stopService(serviceIntent);
+        LogUtils.d("MainActivity", "Floating dock service stopped");
+    }
+
+    /**
+     * Check if floating dock is enabled in settings
+     */
+    public boolean isFloatingDockEnabled() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        return prefs.getBoolean("key_floating_dock_enabled", true); // Default to true
     }
 }

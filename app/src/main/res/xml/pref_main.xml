@@ -7,6 +7,12 @@
             android:summary="Enable dark theme for the app"
             android:title="Dark Mode" />
 
+        <androidx.preference.SwitchPreference
+            android:defaultValue="true"
+            android:key="key_floating_dock_enabled"
+            android:summary="Show floating dock controls while recording"
+            android:title="Floating Dock" />
+
         <androidx.preference.Preference
             android:key="key_floating_dock_permission"
             android:summary="Grant permission to show floating dock while recording"
