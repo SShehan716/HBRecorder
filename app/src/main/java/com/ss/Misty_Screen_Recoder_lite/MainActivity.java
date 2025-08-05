@@ -15,7 +15,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.util.Log;
@@ -39,6 +38,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.preference.PreferenceManager;
 
 import com.hbisoft.hbrecorder.HBRecorder;
 import com.hbisoft.hbrecorder.HBRecorderCodecInfo;
@@ -1031,8 +1031,9 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
             // Settings have been changed, update UI if needed
         });
 
-        // Pass AdMob helper to QuickSettingsFragment for rewarded ads
+        // Pass AdMob helper to both fragments for rewarded ads
         quickSettingsFragment.setAdMobHelper(adMobHelper);
+        advancedSettingsFragment.setAdMobHelper(adMobHelper);
     }
 
     private void startRecording() {
@@ -1205,6 +1206,25 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
     }
 
     public boolean isAudioUnlocked() {
-        return quickSettingsFragment != null && quickSettingsFragment.isAudioUnlocked();
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean isUnlocked = prefs.getBoolean("audio_feature_unlocked", false);
+        
+        if (isUnlocked) {
+            // Check if 24 hours have passed since unlock
+            long unlockTime = prefs.getLong("audio_unlock_time", 0);
+            long currentTime = System.currentTimeMillis();
+            long oneDayInMillis = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+            
+            if (currentTime - unlockTime > oneDayInMillis) {
+                // Expired, reset to locked state
+                prefs.edit()
+                        .putBoolean("audio_feature_unlocked", false)
+                        .putLong("audio_unlock_time", 0)
+                        .apply();
+                return false;
+            }
+            return true;
+        }
+        return false;
     }
 }

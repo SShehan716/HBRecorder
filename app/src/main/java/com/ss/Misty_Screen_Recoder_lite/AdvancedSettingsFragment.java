@@ -1,5 +1,7 @@
 package com.ss.Misty_Screen_Recoder_lite;
 
+import android.app.Activity;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -15,7 +17,11 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.preference.PreferenceManager;
 
+import com.google.android.gms.ads.OnUserEarnedRewardListener;
+import com.google.android.gms.ads.rewarded.RewardItem;
+import com.google.android.material.button.MaterialButton;
 import com.hbisoft.hbrecorder.HBRecorder;
 import com.hbisoft.hbrecorder.HBRecorderCodecInfo;
 
@@ -34,6 +40,13 @@ public class AdvancedSettingsFragment extends Fragment {
     private ImageView advancedAudioLockIcon;
     private TextView audioLockedMessage;
     private com.google.android.material.textfield.TextInputLayout audioSourceContainer;
+    private MaterialButton unlockAudioButton;
+    private AdMobHelper adMobHelper;
+    
+    // SharedPreferences keys
+    private static final String PREF_AUDIO_UNLOCKED = "audio_feature_unlocked";
+    private static final String PREF_AUDIO_ENABLED = "audio_enabled";
+    private static final String PREF_AUDIO_UNLOCK_TIME = "audio_unlock_time";
 
     public interface OnSettingsChangedListener {
         void onSettingsChanged();
@@ -45,6 +58,10 @@ public class AdvancedSettingsFragment extends Fragment {
 
     public void setHBRecorder(HBRecorder hbRecorder) {
         this.hbRecorder = hbRecorder;
+    }
+
+    public void setAdMobHelper(AdMobHelper adMobHelper) {
+        this.adMobHelper = adMobHelper;
     }
 
     @Nullable
@@ -67,6 +84,7 @@ public class AdvancedSettingsFragment extends Fragment {
         advancedAudioLockIcon = view.findViewById(R.id.advanced_audio_lock_icon);
         audioLockedMessage = view.findViewById(R.id.audio_locked_message);
         audioSourceContainer = view.findViewById(R.id.audio_source_container);
+        unlockAudioButton = view.findViewById(R.id.advanced_unlock_audio_button);
 
         setupDropdowns();
         setupListeners();
@@ -240,6 +258,80 @@ public class AdvancedSettingsFragment extends Fragment {
                 }
             }
         });
+
+        unlockAudioButton.setOnClickListener(v -> {
+            showUnlockAudioDialog();
+        });
+    }
+
+    private void showUnlockAudioDialog() {
+        // Show confirmation dialog to ensure user intent
+        new androidx.appcompat.app.AlertDialog.Builder(requireContext())
+                .setTitle("Unlock Audio Recording")
+                .setMessage("Watch a short video ad to unlock the audio recording feature. This will allow you to record system audio and microphone during screen recording.")
+                .setPositiveButton("Watch Video", (dialog, which) -> {
+                    showRewardedAdToUnlock();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void showRewardedAdToUnlock() {
+        if (adMobHelper != null) {
+            // Show loading state
+            unlockAudioButton.setEnabled(false);
+            unlockAudioButton.setText("Loading...");
+            
+            adMobHelper.showRewardedAd((Activity) requireContext(), new OnUserEarnedRewardListener() {
+                @Override
+                public void onUserEarnedReward(@NonNull RewardItem rewardItem) {
+                    // User successfully watched the ad and earned reward
+                    unlockAudioFeature();
+                }
+            });
+        } else {
+            Toast.makeText(requireContext(), "Ad service not available", Toast.LENGTH_SHORT).show();
+            unlockAudioButton.setEnabled(true);
+            unlockAudioButton.setText("Watch Video to Unlock");
+        }
+    }
+
+    private void unlockAudioFeature() {
+        // Save unlocked state with timestamp
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
+        long currentTime = System.currentTimeMillis();
+        prefs.edit()
+                .putBoolean(PREF_AUDIO_UNLOCKED, true)
+                .putLong(PREF_AUDIO_UNLOCK_TIME, currentTime)
+                .apply();
+        
+        // Update UI
+        updateAudioControlsState();
+        
+        Toast.makeText(requireContext(), "Audio recording feature unlocked!", Toast.LENGTH_SHORT).show();
+    }
+
+    private boolean isAudioUnlocked() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
+        boolean isUnlocked = prefs.getBoolean(PREF_AUDIO_UNLOCKED, false);
+        
+        if (isUnlocked) {
+            // Check if 24 hours have passed since unlock
+            long unlockTime = prefs.getLong(PREF_AUDIO_UNLOCK_TIME, 0);
+            long currentTime = System.currentTimeMillis();
+            long oneDayInMillis = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+            
+            if (currentTime - unlockTime > oneDayInMillis) {
+                // Expired, reset to locked state
+                prefs.edit()
+                        .putBoolean(PREF_AUDIO_UNLOCKED, false)
+                        .putLong(PREF_AUDIO_UNLOCK_TIME, 0)
+                        .apply();
+                return false;
+            }
+            return true;
+        }
+        return false;
     }
 
     private void notifySettingsChanged() {
@@ -264,7 +356,7 @@ public class AdvancedSettingsFragment extends Fragment {
     }
 
     private void updateAudioControlsState() {
-        boolean isAudioUnlocked = ((MainActivity) requireActivity()).isAudioUnlocked();
+        boolean isAudioUnlocked = isAudioUnlocked();
         
         if (!isAudioUnlocked) {
             // Audio feature is locked
@@ -278,6 +370,7 @@ public class AdvancedSettingsFragment extends Fragment {
             // Show lock icon and message
             advancedAudioLockIcon.setVisibility(View.VISIBLE);
             audioLockedMessage.setVisibility(View.VISIBLE);
+            unlockAudioButton.setVisibility(View.VISIBLE);
             audioSourceContainer.setEnabled(false);
             audioSourceDropdown.setEnabled(false);
             audioSourceDropdown.setAlpha(0.5f);
@@ -292,6 +385,7 @@ public class AdvancedSettingsFragment extends Fragment {
             // Hide lock icon and message
             advancedAudioLockIcon.setVisibility(View.GONE);
             audioLockedMessage.setVisibility(View.GONE);
+            unlockAudioButton.setVisibility(View.GONE);
             audioSourceContainer.setEnabled(true);
             audioSourceDropdown.setEnabled(true);
             audioSourceDropdown.setAlpha(1.0f);

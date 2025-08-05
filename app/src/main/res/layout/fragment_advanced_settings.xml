@@ -150,10 +150,21 @@
                     android:id="@+id/audio_locked_message"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Audio recording feature is locked. Unlock it in Quick Settings to access advanced audio controls."
+                    android:text="Audio recording feature is locked. Watch a short video to unlock audio recording feature."
                     android:textSize="14sp"
                     android:textColor="@color/text_secondary"
                     android:layout_marginBottom="16dp"
+                    android:visibility="gone"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/advanced_unlock_audio_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Watch Video to Unlock"
+                    android:textAllCaps="false"
+                    app:icon="@drawable/ic_play_circle"
+                    app:iconGravity="textStart"
+                    style="@style/Widget.MaterialComponents.Button"
                     android:visibility="gone"/>
 
                 <com.google.android.material.textfield.TextInputLayout

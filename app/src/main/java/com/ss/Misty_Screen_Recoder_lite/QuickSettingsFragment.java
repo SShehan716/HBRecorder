@@ -32,6 +32,7 @@ public class QuickSettingsFragment extends Fragment {
     // SharedPreferences keys
     private static final String PREF_AUDIO_UNLOCKED = "audio_feature_unlocked";
     private static final String PREF_AUDIO_ENABLED = "audio_enabled";
+    private static final String PREF_AUDIO_UNLOCK_TIME = "audio_unlock_time";
 
     public interface OnSettingsChangedListener {
         void onQualityChanged(boolean isHD);
@@ -118,9 +119,13 @@ public class QuickSettingsFragment extends Fragment {
     }
 
     private void unlockAudioFeature() {
-        // Save unlocked state
+        // Save unlocked state with timestamp
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
-        prefs.edit().putBoolean(PREF_AUDIO_UNLOCKED, true).apply();
+        long currentTime = System.currentTimeMillis();
+        prefs.edit()
+                .putBoolean(PREF_AUDIO_UNLOCKED, true)
+                .putLong(PREF_AUDIO_UNLOCK_TIME, currentTime)
+                .apply();
         
         // Update UI
         updateAudioFeatureState();
@@ -135,7 +140,7 @@ public class QuickSettingsFragment extends Fragment {
 
     private void updateAudioFeatureState() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
-        boolean isAudioUnlocked = prefs.getBoolean(PREF_AUDIO_UNLOCKED, false);
+        boolean isAudioUnlocked = isAudioUnlocked();
         
         if (isAudioUnlocked) {
             // Feature is unlocked
@@ -159,6 +164,29 @@ public class QuickSettingsFragment extends Fragment {
         }
     }
 
+    private boolean isAudioUnlocked() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
+        boolean isUnlocked = prefs.getBoolean(PREF_AUDIO_UNLOCKED, false);
+        
+        if (isUnlocked) {
+            // Check if 24 hours have passed since unlock
+            long unlockTime = prefs.getLong(PREF_AUDIO_UNLOCK_TIME, 0);
+            long currentTime = System.currentTimeMillis();
+            long oneDayInMillis = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+            
+            if (currentTime - unlockTime > oneDayInMillis) {
+                // Expired, reset to locked state
+                prefs.edit()
+                        .putBoolean(PREF_AUDIO_UNLOCKED, false)
+                        .putLong(PREF_AUDIO_UNLOCK_TIME, 0)
+                        .apply();
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
     private void saveAudioPreference(boolean enabled) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
         prefs.edit().putBoolean(PREF_AUDIO_ENABLED, enabled).apply();
@@ -173,10 +201,5 @@ public class QuickSettingsFragment extends Fragment {
         if (audioCheckbox.isEnabled()) {
             audioCheckbox.setChecked(enabled);
         }
-    }
-
-    public boolean isAudioUnlocked() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
-        return prefs.getBoolean(PREF_AUDIO_UNLOCKED, false);
     }
 } 
