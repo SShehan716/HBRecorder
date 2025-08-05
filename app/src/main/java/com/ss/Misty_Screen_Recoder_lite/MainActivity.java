@@ -779,7 +779,8 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
             case OVERLAY_PERMISSION_REQUEST_CODE:
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(this)) {
                     hasPermissions = true;
-                    startRecordingScreen();
+                    // Don't automatically start recording - just show success message
+                    Toast.makeText(this, "Floating dock permission granted", Toast.LENGTH_SHORT).show();
                 } else {
                     hasPermissions = false;
                     showLongToast("No permission for overlay");
@@ -809,8 +810,10 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
                     startbtn.setText(R.string.start_recording);
                 }
         } else if (requestCode == OVERLAY_PERMISSION_REQUEST_CODE) {
-            // User returned from overlay permission screen - check current system status
-            checkAndStartFloatingDock();
+            // User returned from overlay permission screen - just check if permission was granted
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(this)) {
+                Toast.makeText(this, "Floating dock permission granted", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
