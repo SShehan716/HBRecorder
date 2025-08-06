@@ -308,30 +308,12 @@ public class AdvancedSettingsFragment extends Fragment {
         // Update UI
         updateAudioControlsState();
         
-        Toast.makeText(requireContext(), "Audio recording feature unlocked!", Toast.LENGTH_SHORT).show();
-    }
-
-    private boolean isAudioUnlocked() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
-        boolean isUnlocked = prefs.getBoolean(PREF_AUDIO_UNLOCKED, false);
-        
-        if (isUnlocked) {
-            // Check if 24 hours have passed since unlock
-            long unlockTime = prefs.getLong(PREF_AUDIO_UNLOCK_TIME, 0);
-            long currentTime = System.currentTimeMillis();
-            long oneDayInMillis = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-            
-            if (currentTime - unlockTime > oneDayInMillis) {
-                // Expired, reset to locked state
-                prefs.edit()
-                        .putBoolean(PREF_AUDIO_UNLOCKED, false)
-                        .putLong(PREF_AUDIO_UNLOCK_TIME, 0)
-                        .apply();
-                return false;
-            }
-            return true;
+        // Notify MainActivity to refresh other fragments
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).onAudioUnlocked();
         }
-        return false;
+        
+        Toast.makeText(requireContext(), "Audio recording feature unlocked! It will expire in 24 hours.", Toast.LENGTH_LONG).show();
     }
 
     private void notifySettingsChanged() {
@@ -356,39 +338,28 @@ public class AdvancedSettingsFragment extends Fragment {
     }
 
     private void updateAudioControlsState() {
-        boolean isAudioUnlocked = isAudioUnlocked();
-        
+        // Use MainActivity's centralized isAudioUnlocked method
+        boolean isAudioUnlocked = false;
+        if (getActivity() instanceof MainActivity) {
+            isAudioUnlocked = ((MainActivity) getActivity()).isAudioUnlocked();
+        }
+
         if (!isAudioUnlocked) {
-            // Audio feature is locked
-            audioCheckbox.setEnabled(false);
-            audioCheckbox.setChecked(false);
-            audioCheckbox.setText("Audio Recording Locked");
-            audioCheckbox.setClickable(false);
-            audioCheckbox.setFocusable(false);
-            audioCheckbox.setAlpha(0.5f);
-            
-            // Show lock icon and message
+            // Audio is locked - show unlock UI
             advancedAudioLockIcon.setVisibility(View.VISIBLE);
             audioLockedMessage.setVisibility(View.VISIBLE);
             unlockAudioButton.setVisibility(View.VISIBLE);
-            audioSourceContainer.setEnabled(false);
-            audioSourceDropdown.setEnabled(false);
-            audioSourceDropdown.setAlpha(0.5f);
+            audioSourceContainer.setVisibility(View.GONE);
+            audioCheckbox.setEnabled(false);
+            audioCheckbox.setAlpha(0.5f);
         } else {
-            // Audio feature is unlocked
-            audioCheckbox.setEnabled(true);
-            audioCheckbox.setText("Record Audio");
-            audioCheckbox.setClickable(true);
-            audioCheckbox.setFocusable(true);
-            audioCheckbox.setAlpha(1.0f);
-            
-            // Hide lock icon and message
+            // Audio is unlocked - show normal UI
             advancedAudioLockIcon.setVisibility(View.GONE);
             audioLockedMessage.setVisibility(View.GONE);
             unlockAudioButton.setVisibility(View.GONE);
-            audioSourceContainer.setEnabled(true);
-            audioSourceDropdown.setEnabled(true);
-            audioSourceDropdown.setAlpha(1.0f);
+            audioSourceContainer.setVisibility(View.VISIBLE);
+            audioCheckbox.setEnabled(true);
+            audioCheckbox.setAlpha(1.0f);
         }
     }
 } 

@@ -1257,4 +1257,31 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         return prefs.getBoolean("key_floating_dock_enabled", true); // Default to true
     }
+
+    /**
+     * Public method to handle audio unlock from any fragment
+     */
+    public void onAudioUnlocked() {
+        // Audio feature was unlocked via rewarded ad
+        // Update advanced settings audio switch
+        if (advancedAudioSwitch != null) {
+            advancedAudioSwitch.setEnabled(true);
+            advancedAudioSwitch.setAlpha(1.0f);
+        }
+        // Enable audio recording by default when unlocked
+        isAudioEnabled = true;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            hbRecorder.isAudioEnabled(true);
+        }
+        saveAudioPreference(true);
+        saveSettings();
+        
+        // Refresh both fragments' audio controls
+        if (quickSettingsFragment != null) {
+            quickSettingsFragment.updateAudioFeatureState();
+        }
+        if (advancedSettingsFragment != null) {
+            advancedSettingsFragment.refreshAudioControlsState();
+        }
+    }
 }

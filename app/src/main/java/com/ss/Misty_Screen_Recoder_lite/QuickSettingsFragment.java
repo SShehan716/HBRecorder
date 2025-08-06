@@ -119,9 +119,10 @@ public class QuickSettingsFragment extends Fragment {
     }
 
     private void unlockAudioFeature() {
-        // Save unlocked state with timestamp
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
         long currentTime = System.currentTimeMillis();
+        
+        // Save unlock state and timestamp
         prefs.edit()
                 .putBoolean(PREF_AUDIO_UNLOCKED, true)
                 .putLong(PREF_AUDIO_UNLOCK_TIME, currentTime)
@@ -130,61 +131,34 @@ public class QuickSettingsFragment extends Fragment {
         // Update UI
         updateAudioFeatureState();
         
-        // Notify parent
+        // Notify MainActivity to refresh other fragments
         if (listener != null) {
             listener.onAudioUnlocked();
         }
         
-        Toast.makeText(requireContext(), "Audio recording feature unlocked!", Toast.LENGTH_SHORT).show();
+        Toast.makeText(requireContext(), "Audio recording feature unlocked! It will expire in 24 hours.", Toast.LENGTH_LONG).show();
     }
 
-    private void updateAudioFeatureState() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
-        boolean isAudioUnlocked = isAudioUnlocked();
-        
-        if (isAudioUnlocked) {
-            // Feature is unlocked
+    public void updateAudioFeatureState() {
+        // Use MainActivity's centralized isAudioUnlocked method
+        boolean isAudioUnlocked = false;
+        if (getActivity() instanceof MainActivity) {
+            isAudioUnlocked = ((MainActivity) getActivity()).isAudioUnlocked();
+        }
+
+        if (!isAudioUnlocked) {
+            // Audio is locked - show unlock UI
+            unlockAudioButton.setVisibility(View.VISIBLE);
+            audioLockIcon.setVisibility(View.VISIBLE);
+            audioCheckbox.setEnabled(false);
+            audioCheckbox.setAlpha(0.5f);
+        } else {
+            // Audio is unlocked - show normal UI
             unlockAudioButton.setVisibility(View.GONE);
             audioLockIcon.setVisibility(View.GONE);
             audioCheckbox.setEnabled(true);
             audioCheckbox.setAlpha(1.0f);
-            
-            // Restore saved audio preference
-            boolean audioEnabled = prefs.getBoolean(PREF_AUDIO_ENABLED, false);
-            audioCheckbox.setChecked(audioEnabled);
-        } else {
-            // Feature is locked
-            unlockAudioButton.setVisibility(View.VISIBLE);
-            audioLockIcon.setVisibility(View.VISIBLE);
-            audioCheckbox.setEnabled(false);
-            audioCheckbox.setChecked(false);
-            audioCheckbox.setAlpha(0.5f);
-            unlockAudioButton.setEnabled(true);
-            unlockAudioButton.setText("Watch Video to Unlock");
         }
-    }
-
-    private boolean isAudioUnlocked() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
-        boolean isUnlocked = prefs.getBoolean(PREF_AUDIO_UNLOCKED, false);
-        
-        if (isUnlocked) {
-            // Check if 24 hours have passed since unlock
-            long unlockTime = prefs.getLong(PREF_AUDIO_UNLOCK_TIME, 0);
-            long currentTime = System.currentTimeMillis();
-            long oneDayInMillis = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-            
-            if (currentTime - unlockTime > oneDayInMillis) {
-                // Expired, reset to locked state
-                prefs.edit()
-                        .putBoolean(PREF_AUDIO_UNLOCKED, false)
-                        .putLong(PREF_AUDIO_UNLOCK_TIME, 0)
-                        .apply();
-                return false;
-            }
-            return true;
-        }
-        return false;
     }
 
     private void saveAudioPreference(boolean enabled) {
