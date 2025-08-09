@@ -3,14 +3,15 @@
     android:layout_height="wrap_content"
     android:background="@android:color/transparent">
 
-    <!-- Collapsed: Screen recorder icon with low opacity -->
+    <!-- Collapsed: Screen recorder icon with circular background -->
     <ImageView
         android:id="@+id/recorder_icon"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
         android:src="@drawable/ic_record"
-        android:background="@android:color/transparent"
-        android:alpha="0.4"
+        android:background="@drawable/circular_icon_background"
+        android:alpha="0.3"
+        android:padding="12dp"
         android:layout_gravity="center_vertical|start"
         android:visibility="visible"/>
 
