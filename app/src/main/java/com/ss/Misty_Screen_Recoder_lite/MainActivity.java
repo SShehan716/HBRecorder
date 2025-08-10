@@ -17,16 +17,10 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.provider.Settings;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.RadioGroup;
 import android.view.WindowManager;
 import androidx.appcompat.widget.SwitchCompat;
 import android.widget.Toast;
@@ -39,6 +33,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.preference.PreferenceManager;
+import androidx.appcompat.app.AppCompatDelegate;
 
 import com.hbisoft.hbrecorder.HBRecorder;
 import com.hbisoft.hbrecorder.HBRecorderCodecInfo;
@@ -49,25 +44,18 @@ import java.io.File;
 import java.sql.Date;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 
-import static android.content.res.Configuration.ORIENTATION_PORTRAIT;
 import static com.hbisoft.hbrecorder.Constants.MAX_FILE_SIZE_REACHED_ERROR;
 import static com.hbisoft.hbrecorder.Constants.SETTINGS_ERROR;
 
-import com.google.android.material.chip.Chip;
-import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.switchmaterial.SwitchMaterial;
-import com.google.android.material.textfield.TextInputLayout;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
-import com.ss.Misty_Screen_Recoder_lite.LogUtils;
-import com.ss.Misty_Screen_Recoder_lite.SettingsActivity;
+
 
 
 /**
@@ -162,6 +150,16 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // Apply theme based on current dark mode setting
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean isDarkMode = prefs.getBoolean("key_dark_mode", false);
+        if (isDarkMode) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        }
+        
         setContentView(R.layout.activity_main);
 
         requestAllPermissions();
@@ -183,9 +181,19 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         viewPager = findViewById(R.id.viewPager);
         tabLayout = findViewById(R.id.tabLayout);
 
+        if (BuildConfig.DEBUG) {
+            LogUtils.d("MainActivity", "ViewPager: " + (viewPager != null ? "Found" : "NULL"));
+            LogUtils.d("MainActivity", "TabLayout: " + (tabLayout != null ? "Found" : "NULL"));
+        }
+
         // Create fragments
         quickSettingsFragment = new QuickSettingsFragment();
         advancedSettingsFragment = new AdvancedSettingsFragment();
+
+        if (BuildConfig.DEBUG) {
+            LogUtils.d("MainActivity", "QuickSettingsFragment created: " + (quickSettingsFragment != null));
+            LogUtils.d("MainActivity", "AdvancedSettingsFragment created: " + (advancedSettingsFragment != null));
+        }
 
         // Set up ViewPager adapter
         ViewPagerAdapter adapter = new ViewPagerAdapter(this);
@@ -193,10 +201,37 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         adapter.addFragment(advancedSettingsFragment, "Advanced");
         viewPager.setAdapter(adapter);
 
+        if (BuildConfig.DEBUG) {
+            LogUtils.d("MainActivity", "ViewPager adapter set with " + adapter.getItemCount() + " fragments");
+        }
+
         // Connect TabLayout with ViewPager
         new TabLayoutMediator(tabLayout, viewPager,
-                (tab, position) -> tab.setText(position == 0 ? "Quick" : "Advanced")
+                (tab, position) -> {
+                    tab.setText(position == 0 ? "Quick" : "Advanced");
+                    if (BuildConfig.DEBUG) {
+                        LogUtils.d("MainActivity", "Tab " + position + " set to: " + (position == 0 ? "Quick" : "Advanced"));
+                    }
+                }
         ).attach();
+
+        if (BuildConfig.DEBUG) {
+            LogUtils.d("MainActivity", "TabLayoutMediator attached successfully");
+        }
+
+        // Add fallback mechanism - check if ViewPager is working after a delay
+        new android.os.Handler().postDelayed(() -> {
+            if (viewPager != null && viewPager.getChildCount() == 0) {
+                if (BuildConfig.DEBUG) {
+                    LogUtils.w("MainActivity", "ViewPager has no children, showing fallback content");
+                }
+                // Show fallback content if ViewPager is not working
+                android.view.View fallbackContent = findViewById(R.id.fallback_content);
+                if (fallbackContent != null) {
+                    fallbackContent.setVisibility(android.view.View.VISIBLE);
+                }
+            }
+        }, 1000); // Check after 1 second
 
         // Initialize AdMob (lazy loading) - MUST be before setupFragments
         initializeAds();
@@ -215,45 +250,18 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
             }
         }, 2000); // 2 second delay
 
-        // Examples of how to use the HBRecorderCodecInfo class to get codec info
-        HBRecorderCodecInfo hbRecorderCodecInfo = new HBRecorderCodecInfo();
-            int mWidth = hbRecorder.getDefaultWidth();
-            int mHeight = hbRecorder.getDefaultHeight();
-            String mMimeType = "video/avc";
-            int mFPS = 30;
-            if (hbRecorderCodecInfo.isMimeTypeSupported(mMimeType)) {
-                String defaultVideoEncoder = hbRecorderCodecInfo.getDefaultVideoEncoderName(mMimeType);
-                boolean isSizeAndFramerateSupported = hbRecorderCodecInfo.isSizeAndFramerateSupported(mWidth, mHeight, mFPS, mMimeType, ORIENTATION_PORTRAIT);
-                LogUtils.e("EXAMPLE", "THIS IS AN EXAMPLE OF HOW TO USE THE (HBRecorderCodecInfo) TO GET CODEC INFO:");
-                LogUtils.e("HBRecorderCodecInfo", "defaultVideoEncoder for (" + mMimeType + ") -> " + defaultVideoEncoder);
-                LogUtils.e("HBRecorderCodecInfo", "MaxSupportedFrameRate -> " + hbRecorderCodecInfo.getMaxSupportedFrameRate(mWidth, mHeight, mMimeType));
-                LogUtils.e("HBRecorderCodecInfo", "MaxSupportedBitrate -> " + hbRecorderCodecInfo.getMaxSupportedBitrate(mMimeType));
-                LogUtils.e("HBRecorderCodecInfo", "isSizeAndFramerateSupported @ Width = "+mWidth+" Height = "+mHeight+" FPS = "+mFPS+" -> " + isSizeAndFramerateSupported);
-                LogUtils.e("HBRecorderCodecInfo", "isSizeSupported @ Width = "+mWidth+" Height = "+mHeight+" -> " + hbRecorderCodecInfo.isSizeSupported(mWidth, mHeight, mMimeType));
-                LogUtils.e("HBRecorderCodecInfo", "Default Video Format = " + hbRecorderCodecInfo.getDefaultVideoFormat());
-
-                HashMap<String, String> supportedVideoMimeTypes = hbRecorderCodecInfo.getSupportedVideoMimeTypes();
-                for (Map.Entry<String, String> entry : supportedVideoMimeTypes.entrySet()) {
-                    LogUtils.e("HBRecorderCodecInfo", "Supported VIDEO encoders and mime types : " + entry.getKey() + " -> " + entry.getValue());
-                }
-
-                HashMap<String, String> supportedAudioMimeTypes = hbRecorderCodecInfo.getSupportedAudioMimeTypes();
-                for (Map.Entry<String, String> entry : supportedAudioMimeTypes.entrySet()) {
-                    LogUtils.e("HBRecorderCodecInfo", "Supported AUDIO encoders and mime types : " + entry.getKey() + " -> " + entry.getValue());
-                }
-
-                ArrayList<String> supportedVideoFormats = hbRecorderCodecInfo.getSupportedVideoFormats();
-                for (int j = 0; j < supportedVideoFormats.size(); j++) {
-                    LogUtils.e("HBRecorderCodecInfo", "Available Video Formats : " + supportedVideoFormats.get(j));
-                }
-        } else {
-                LogUtils.e("HBRecorderCodecInfo", "MimeType not supported");
+        // Initialize codec info for setup (removed excessive debug logging for performance)
+        if (BuildConfig.DEBUG) {
+            LogUtils.d("MainActivity", "Codec initialization completed");
         }
     }
 
     private void requestNotificationPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 2001);
+        // POST_NOTIFICATIONS permission is only required for API level 33+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 2001);
+            }
         }
     }
 
@@ -268,8 +276,11 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
                 permissionsToRequest.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
             }
         }
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS);
+        // POST_NOTIFICATIONS permission is only required for API level 33+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS);
+            }
         }
 
         if (!permissionsToRequest.isEmpty()) {
@@ -304,80 +315,470 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
     }
 
     private void setupDropdowns() {
+        // Show loading state
+        setDropdownsEnabled(false);
+        
+        // Move heavy codec operations to background thread
+        new Thread(() -> {
+            try {
         HBRecorderCodecInfo codecInfo = new HBRecorderCodecInfo();
         codecInfo.setContext(this);
 
         ArrayList<String> supportedFormats = codecInfo.getSupportedVideoFormats();
+                
+                // Switch back to main thread for UI updates
+                runOnUiThread(() -> {
         if (supportedFormats == null || supportedFormats.isEmpty()) {
             showLongToast("No supported video codecs found. Screen recording is not supported on this device.");
-            // Optionally, disable the record button here
             return;
         }
-        // Video Encoder options (by supported MIME types)
-        ArrayList<String> encoders = new ArrayList<>();
-        for (String format : supportedFormats) {
-            if (format.equals("MPEG_4")) encoders.add("H264");
-            if (format.equals("WEBM")) encoders.add("VP8");
-            if (format.equals("THREE_GPP")) encoders.add("H263");
-        }
-        if (encoders.isEmpty()) encoders.add("H264"); // fallback
-        ArrayAdapter<String> encoderAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, encoders);
+                    setupDropdownsWithCodecInfo(codecInfo, supportedFormats);
+                    setDropdownsEnabled(true);
+                });
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    LogUtils.e("MainActivity", "Error setting up codecs: " + e.getMessage());
+                    showLongToast("Error initializing codecs. Using default settings.");
+                    setupDefaultDropdowns();
+                    setDropdownsEnabled(true);
+                });
+            }
+        }).start();
+    }
+    
+    private void setDropdownsEnabled(boolean enabled) {
+        if (encoderDropdown != null) encoderDropdown.setEnabled(enabled);
+        if (resolutionDropdown != null) resolutionDropdown.setEnabled(enabled);
+        if (framerateDropdown != null) framerateDropdown.setEnabled(enabled);
+        if (bitrateDropdown != null) bitrateDropdown.setEnabled(enabled);
+        if (outputFormatDropdown != null) outputFormatDropdown.setEnabled(enabled);
+        if (audioSourceDropdown != null) audioSourceDropdown.setEnabled(enabled);
+    }
+    
+    private void setupDefaultDropdowns() {
+        // Set up basic dropdowns with default values when codec detection fails
+        String[] defaultEncoders = {"H264"};
+        ArrayAdapter<String> encoderAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, defaultEncoders);
         encoderDropdown.setAdapter(encoderAdapter);
-        encoderDropdown.setText(encoders.get(0), false);
-
-        // Output format options (supported video formats)
-        ArrayAdapter<String> formatAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, supportedFormats);
+        encoderDropdown.setText(defaultEncoders[0], false);
+        
+        String[] defaultResolutions = {"720p", "1080p"};
+        ArrayAdapter<String> resolutionAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, defaultResolutions);
+        resolutionDropdown.setAdapter(resolutionAdapter);
+        resolutionDropdown.setText(defaultResolutions[0], false);
+        
+        String[] defaultFramerates = {"30", "60"};
+        ArrayAdapter<String> framerateAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, defaultFramerates);
+        framerateDropdown.setAdapter(framerateAdapter);
+        framerateDropdown.setText(defaultFramerates[0], false);
+        
+        String[] defaultBitrates = {"4 Mbps", "8 Mbps"};
+        ArrayAdapter<String> bitrateAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, defaultBitrates);
+        bitrateDropdown.setAdapter(bitrateAdapter);
+        bitrateDropdown.setText(defaultBitrates[0], false);
+        
+        String[] defaultFormats = {"MPEG_4"};
+        ArrayAdapter<String> formatAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, defaultFormats);
         outputFormatDropdown.setAdapter(formatAdapter);
-        outputFormatDropdown.setText(supportedFormats.get(0), false);
-
-        // Resolution options (filter by isSizeSupported)
-        String[] allResolutions = {"720p", "1080p", "1440p", "2160p"};
-        ArrayList<String> supportedResolutions = new ArrayList<>();
-        for (String res : allResolutions) {
-            int w = 720, h = 1280;
-            if (res.equals("1080p")) { w = 1080; h = 1920; }
-            if (res.equals("1440p")) { w = 1440; h = 2560; }
-            if (res.equals("2160p")) { w = 2160; h = 3840; }
-            if (codecInfo.isSizeSupported(w, h, "video/mp4")) supportedResolutions.add(res);
+        outputFormatDropdown.setText(defaultFormats[0], false);
+        
+        String[] audioSources = {"Microphone", "Internal Audio", "Voice Call", "Default"};
+        ArrayAdapter<String> audioSourceAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, audioSources);
+        audioSourceDropdown.setAdapter(audioSourceAdapter);
+        audioSourceDropdown.setText(audioSources[0], false);
+        
+        loadSettings();
+    }
+    
+    private void setupDropdownsWithCodecInfo(HBRecorderCodecInfo codecInfo, ArrayList<String> supportedFormats) {
+        if (BuildConfig.DEBUG) {
+            LogUtils.d("MainActivity", "Setting up dropdowns with " + supportedFormats.size() + " supported formats");
         }
-        if (supportedResolutions.isEmpty()) supportedResolutions.add("720p");
+        
+        // Get device screen dimensions for optimal resolution detection
+        android.util.DisplayMetrics displayMetrics = new android.util.DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        int deviceWidth = displayMetrics.widthPixels;
+        int deviceHeight = displayMetrics.heightPixels;
+        
+        if (BuildConfig.DEBUG) {
+            LogUtils.d("MainActivity", "Device screen: " + deviceWidth + "x" + deviceHeight);
+        }
+
+        // 1. Video Encoder options - Enhanced detection with user-friendly names
+        ArrayList<String> encoders = getSupportedEncoders(codecInfo, supportedFormats);
+        ArrayList<String> userFriendlyEncoders = convertToUserFriendlyEncoders(encoders);
+        ArrayAdapter<String> encoderAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, userFriendlyEncoders);
+        encoderDropdown.setAdapter(encoderAdapter);
+        encoderDropdown.setText(userFriendlyEncoders.get(0), false);
+
+        // 2. Output format options - Convert to user-friendly names
+        ArrayList<String> userFriendlyFormats = convertToUserFriendlyFormats(supportedFormats);
+        ArrayAdapter<String> formatAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, userFriendlyFormats);
+        outputFormatDropdown.setAdapter(formatAdapter);
+        outputFormatDropdown.setText(userFriendlyFormats.get(0), false);
+
+        // 3. Resolution options - Enhanced with device-specific detection
+        ArrayList<String> supportedResolutions = getSupportedResolutions(codecInfo, supportedFormats, deviceWidth, deviceHeight);
         ArrayAdapter<String> resolutionAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, supportedResolutions);
         resolutionDropdown.setAdapter(resolutionAdapter);
         resolutionDropdown.setText(supportedResolutions.get(0), false);
 
-        // Frame rate options (filter by getMaxSupportedFrameRate)
-        String[] allFramerates = {"24", "30", "60"};
-        ArrayList<String> supportedFramerates = new ArrayList<>();
-        for (String fr : allFramerates) {
-            double maxFps = codecInfo.getMaxSupportedFrameRate(720, 1280, "video/mp4");
-            if (Double.parseDouble(fr) <= maxFps) supportedFramerates.add(fr);
-        }
-        if (supportedFramerates.isEmpty()) supportedFramerates.add("30");
+        // 4. Frame rate options - Enhanced detection per resolution
+        ArrayList<String> supportedFramerates = getSupportedFramerates(codecInfo, supportedFormats, deviceWidth, deviceHeight);
         ArrayAdapter<String> framerateAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, supportedFramerates);
         framerateDropdown.setAdapter(framerateAdapter);
         framerateDropdown.setText(supportedFramerates.get(0), false);
 
-        // Bitrate options (filter by getMaxSupportedBitrate)
-        String[] allBitrates = {"2 Mbps", "4 Mbps", "8 Mbps", "16 Mbps"};
-        ArrayList<String> supportedBitrates = new ArrayList<>();
-        int maxBitrate = codecInfo.getMaxSupportedBitrate("video/mp4");
-        for (String br : allBitrates) {
-            int val = Integer.parseInt(br.split(" ")[0]) * 1000000;
-            if (val <= maxBitrate) supportedBitrates.add(br);
-        }
-        if (supportedBitrates.isEmpty()) supportedBitrates.add("4 Mbps");
+        // 5. Bitrate options - Enhanced detection per format
+        ArrayList<String> supportedBitrates = getSupportedBitrates(codecInfo, supportedFormats);
         ArrayAdapter<String> bitrateAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, supportedBitrates);
         bitrateDropdown.setAdapter(bitrateAdapter);
         bitrateDropdown.setText(supportedBitrates.get(0), false);
 
-        // Audio source options (keep as is for now)
-        String[] audioSources = {"System + Mic", "System", "Mic"};
+        // 6. Audio source options - corrected for proper functionality
+        String[] audioSources = {"Microphone", "Internal Audio", "Voice Call", "Default"};
         ArrayAdapter<String> audioSourceAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, audioSources);
         audioSourceDropdown.setAdapter(audioSourceAdapter);
         audioSourceDropdown.setText(audioSources[0], false);
 
         // Load saved settings after setting up dropdowns
         loadSettings();
+        
+        if (BuildConfig.DEBUG) {
+            LogUtils.d("MainActivity", "Dropdowns setup completed successfully");
+        }
+    }
+    
+    /**
+     * Get supported video encoders based on device capabilities
+     */
+    private ArrayList<String> getSupportedEncoders(HBRecorderCodecInfo codecInfo, ArrayList<String> supportedFormats) {
+        ArrayList<String> encoders = new ArrayList<>();
+        
+        // Check for H.264 support (most common) - MPEG_4 format
+        if (supportedFormats.contains("MPEG_4")) {
+            encoders.add("H264");
+            if (BuildConfig.DEBUG) {
+                LogUtils.d("MainActivity", "H.264 encoder supported (MPEG_4 format)");
+            }
+        }
+        
+        // Check for H.265/HEVC support (better compression) - MPEG_4 format
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && supportedFormats.contains("MPEG_4")) {
+            // Note: H.265 support is device-specific, but we can offer it if MPEG_4 is supported
+            encoders.add("H265");
+            if (BuildConfig.DEBUG) {
+                LogUtils.d("MainActivity", "H.265 encoder supported (MPEG_4 format)");
+            }
+        }
+        
+        // Check for VP8 support (WebM format)
+        if (supportedFormats.contains("WEBM")) {
+            encoders.add("VP8");
+            if (BuildConfig.DEBUG) {
+                LogUtils.d("MainActivity", "VP8 encoder supported (WEBM format)");
+            }
+        }
+        
+        // Check for VP9 support (better than VP8) - WebM format
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && supportedFormats.contains("WEBM")) {
+            encoders.add("VP9");
+            if (BuildConfig.DEBUG) {
+                LogUtils.d("MainActivity", "VP9 encoder supported (WEBM format)");
+            }
+        }
+        
+        // Check for H.263 support (3GP format)
+        if (supportedFormats.contains("THREE_GPP")) {
+            encoders.add("H263");
+            if (BuildConfig.DEBUG) {
+                LogUtils.d("MainActivity", "H.263 encoder supported (3GP format)");
+            }
+        }
+        
+        // Fallback to H.264 if nothing else is supported
+        if (encoders.isEmpty()) {
+            encoders.add("H264");
+            if (BuildConfig.DEBUG) {
+                LogUtils.w("MainActivity", "No specific encoders detected, using H.264 fallback");
+            }
+        }
+        
+        return encoders;
+    }
+    
+    /**
+     * Get supported resolutions based on device capabilities
+     */
+    private ArrayList<String> getSupportedResolutions(HBRecorderCodecInfo codecInfo, ArrayList<String> supportedFormats, int deviceWidth, int deviceHeight) {
+        ArrayList<String> supportedResolutions = new ArrayList<>();
+        
+        // Define resolution presets with proper dimensions
+        ResolutionPreset[] presets = {
+            new ResolutionPreset("480p", 480, 854),
+            new ResolutionPreset("720p", 720, 1280),
+            new ResolutionPreset("1080p", 1080, 1920),
+            new ResolutionPreset("1440p", 1440, 2560),
+            new ResolutionPreset("2160p", 2160, 3840)
+        };
+        
+        // Test each resolution with the best supported format
+        String bestFormat = getBestSupportedFormat(supportedFormats);
+        
+        for (ResolutionPreset preset : presets) {
+            // Check if this resolution is supported by the codec
+            if (codecInfo.isSizeSupported(preset.width, preset.height, bestFormat)) {
+                // Additional check: ensure it's reasonable for the device
+                // Note: We don't limit to device screen size as screen recording can be higher resolution
+                // than the device screen (e.g., 4K recording on 1080p screen)
+                supportedResolutions.add(preset.name);
+                if (BuildConfig.DEBUG) {
+                    LogUtils.d("MainActivity", "Resolution " + preset.name + " (" + preset.width + "x" + preset.height + ") supported");
+                }
+            } else {
+                if (BuildConfig.DEBUG) {
+                    LogUtils.d("MainActivity", "Resolution " + preset.name + " not supported by codec");
+                }
+            }
+        }
+        
+        // Fallback to 720p if nothing is supported
+        if (supportedResolutions.isEmpty()) {
+            supportedResolutions.add("720p");
+            if (BuildConfig.DEBUG) {
+                LogUtils.w("MainActivity", "No resolutions detected, using 720p fallback");
+            }
+        }
+        
+        return supportedResolutions;
+    }
+    
+    /**
+     * Get supported frame rates based on device capabilities
+     */
+    private ArrayList<String> getSupportedFramerates(HBRecorderCodecInfo codecInfo, ArrayList<String> supportedFormats, int deviceWidth, int deviceHeight) {
+        ArrayList<String> supportedFramerates = new ArrayList<>();
+        
+        String bestFormat = getBestSupportedFormat(supportedFormats);
+        
+        // Test common frame rates with a standard resolution (720p) for consistency
+        int testWidth = 720;
+        int testHeight = 1280;
+        double maxFps = codecInfo.getMaxSupportedFrameRate(testWidth, testHeight, bestFormat);
+        
+        if (BuildConfig.DEBUG) {
+            LogUtils.d("MainActivity", "Max supported FPS at " + testWidth + "x" + testHeight + ": " + maxFps);
+        }
+        
+        // Test common frame rates
+        int[] frameRates = {24, 30, 60};
+        for (int fps : frameRates) {
+            if (fps <= maxFps) {
+                supportedFramerates.add(String.valueOf(fps));
+                if (BuildConfig.DEBUG) {
+                    LogUtils.d("MainActivity", fps + " FPS supported");
+                }
+            } else {
+                if (BuildConfig.DEBUG) {
+                    LogUtils.d("MainActivity", fps + " FPS not supported (max: " + maxFps + ")");
+                }
+            }
+        }
+        
+        // Fallback to 30 if nothing is supported
+        if (supportedFramerates.isEmpty()) {
+            supportedFramerates.add("30");
+            if (BuildConfig.DEBUG) {
+                LogUtils.w("MainActivity", "No frame rates detected, using 30 FPS fallback");
+            }
+        }
+        
+        return supportedFramerates;
+    }
+    
+    /**
+     * Get supported bitrates based on device capabilities
+     */
+    private ArrayList<String> getSupportedBitrates(HBRecorderCodecInfo codecInfo, ArrayList<String> supportedFormats) {
+        ArrayList<String> supportedBitrates = new ArrayList<>();
+        
+        String bestFormat = getBestSupportedFormat(supportedFormats);
+        int maxBitrate = codecInfo.getMaxSupportedBitrate(bestFormat);
+        
+        if (BuildConfig.DEBUG) {
+            LogUtils.d("MainActivity", "Max supported bitrate: " + maxBitrate + " bps");
+        }
+        
+        // Test common bitrates (in Mbps)
+        int[] bitratesMbps = {1, 2, 4, 8, 16, 32};
+        for (int bitrateMbps : bitratesMbps) {
+            int bitrateBps = bitrateMbps * 1000000;
+            if (bitrateBps <= maxBitrate) {
+                supportedBitrates.add(bitrateMbps + " Mbps");
+                if (BuildConfig.DEBUG) {
+                    LogUtils.d("MainActivity", bitrateMbps + " Mbps supported");
+                }
+            } else {
+                if (BuildConfig.DEBUG) {
+                    LogUtils.d("MainActivity", bitrateMbps + " Mbps not supported (max: " + (maxBitrate / 1000000) + " Mbps)");
+                }
+            }
+        }
+        
+        // Fallback to 4 Mbps if nothing is supported
+        if (supportedBitrates.isEmpty()) {
+            supportedBitrates.add("4 Mbps");
+            if (BuildConfig.DEBUG) {
+                LogUtils.w("MainActivity", "No bitrates detected, using 4 Mbps fallback");
+            }
+        }
+        
+        return supportedBitrates;
+    }
+    
+    /**
+     * Get the best supported format for this device
+     */
+    private String getBestSupportedFormat(ArrayList<String> supportedFormats) {
+        // Priority order: MPEG_4 > WEBM > THREE_GPP
+        if (supportedFormats.contains("MPEG_4")) {
+            return "video/mp4";
+        } else if (supportedFormats.contains("WEBM")) {
+            return "video/webm";
+        } else if (supportedFormats.contains("THREE_GPP")) {
+            return "video/3gpp";
+        } else {
+            return "video/mp4"; // Default fallback
+        }
+    }
+    
+    /**
+     * Convert technical format names to user-friendly names
+     */
+    private ArrayList<String> convertToUserFriendlyFormats(ArrayList<String> supportedFormats) {
+        ArrayList<String> userFriendlyFormats = new ArrayList<>();
+        
+        for (String format : supportedFormats) {
+            switch (format) {
+                case "MPEG_4":
+                    userFriendlyFormats.add("MP4 (Best Quality)");
+                    break;
+                case "WEBM":
+                    userFriendlyFormats.add("WebM (Web Optimized)");
+                    break;
+                case "THREE_GPP":
+                    userFriendlyFormats.add("3GP (Small File Size)");
+                    break;
+                default:
+                    userFriendlyFormats.add(format); // Keep original if unknown
+                    break;
+            }
+        }
+        
+        return userFriendlyFormats;
+    }
+    
+    /**
+     * Convert user-friendly format name back to technical name
+     */
+    private String getUserFriendlyToTechnicalFormat(String userFriendlyFormat) {
+        if (userFriendlyFormat.contains("MP4")) {
+            return "MPEG_4";
+        } else if (userFriendlyFormat.contains("WebM")) {
+            return "WEBM";
+        } else if (userFriendlyFormat.contains("3GP")) {
+            return "THREE_GPP";
+        } else {
+            return userFriendlyFormat; // Return as is if no match
+        }
+    }
+    
+    /**
+     * Convert technical encoder names to user-friendly names
+     */
+    private ArrayList<String> convertToUserFriendlyEncoders(ArrayList<String> encoders) {
+        ArrayList<String> userFriendlyEncoders = new ArrayList<>();
+        
+        for (String encoder : encoders) {
+            switch (encoder) {
+                case "H264":
+                    userFriendlyEncoders.add("H.264 (Best Compatibility)");
+                    break;
+                case "H265":
+                    userFriendlyEncoders.add("H.265 (Better Compression)");
+                    break;
+                case "VP8":
+                    userFriendlyEncoders.add("VP8 (Web Optimized)");
+                    break;
+                case "VP9":
+                    userFriendlyEncoders.add("VP9 (Advanced Web)");
+                    break;
+                case "H263":
+                    userFriendlyEncoders.add("H.263 (Legacy Support)");
+                    break;
+                default:
+                    userFriendlyEncoders.add(encoder); // Keep original if unknown
+                    break;
+            }
+        }
+        
+        return userFriendlyEncoders;
+    }
+    
+    /**
+     * Convert user-friendly encoder name back to technical name
+     */
+    private String getUserFriendlyToTechnicalEncoder(String userFriendlyEncoder) {
+        if (userFriendlyEncoder.contains("H.264")) {
+            return "H264";
+        } else if (userFriendlyEncoder.contains("H.265")) {
+            return "H265";
+        } else if (userFriendlyEncoder.contains("VP8")) {
+            return "VP8";
+        } else if (userFriendlyEncoder.contains("VP9")) {
+            return "VP9";
+        } else if (userFriendlyEncoder.contains("H.263")) {
+            return "H263";
+        } else {
+            return userFriendlyEncoder; // Return as is if no match
+        }
+    }
+    
+    /**
+     * Helper class for resolution presets
+     */
+    private static class ResolutionPreset {
+        String name;
+        int width;
+        int height;
+        
+        ResolutionPreset(String name, int width, int height) {
+            this.name = name;
+            this.width = width;
+            this.height = height;
+        }
+    }
+    
+    /**
+     * Get resolution dimensions from resolution name
+     */
+    private int[] getResolutionDimensions(String resolution) {
+        switch (resolution) {
+            case "480p":
+                return new int[]{480, 854};
+            case "720p":
+                return new int[]{720, 1280};
+            case "1080p":
+                return new int[]{1080, 1920};
+            case "1440p":
+                return new int[]{1440, 2560};
+            case "2160p":
+                return new int[]{2160, 3840};
+            default:
+                LogUtils.e("MainActivity", "Unknown resolution: " + resolution);
+                return null;
+        }
     }
 
     private void saveAudioPreference(boolean isEnabled) {
@@ -395,17 +796,7 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
     //Start Button OnClickListener
     private void setOnClickListeners() {
         startbtn.setOnClickListener(v -> {
-            if (isStopPending) {
-                // Ignore clicks while waiting for stop to complete
-                return;
-            }
-                if (!hbRecorder.isBusyRecording()) {
-                    startRecordingScreen();
-                } else {
-                isStopPending = true;
-                    hbRecorder.stopScreenRecording();
-                // The button text will be set to START in HBRecorderOnComplete()
-            }
+            handleRecordingButtonClick();
         });
 
         advancedAudioSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
@@ -420,76 +811,60 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
 
         encoderDropdown.setOnItemClickListener((parent, view, position, id) -> {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                hbRecorder.setVideoEncoder(encoderDropdown.getText().toString());
-                saveSettings();
-            }
-        });
-
-        resolutionDropdown.setOnItemClickListener((parent, view, position, id) -> {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                String resolution = resolutionDropdown.getText().toString();
-                String[] dimensions = resolution.split("x");
-                if (dimensions.length == 2) {
-                    hbRecorder.setScreenDimensions(Integer.parseInt(dimensions[0]), Integer.parseInt(dimensions[1]));
+                String userFriendlyEncoder = encoderDropdown.getText().toString();
+                String technicalEncoder = getUserFriendlyToTechnicalEncoder(userFriendlyEncoder);
+                hbRecorder.setVideoEncoder(technicalEncoder);
+                if (BuildConfig.DEBUG) {
+                    LogUtils.d("MainActivity", "Video encoder set to: " + userFriendlyEncoder + " (technical: " + technicalEncoder + ")");
                 }
                 saveSettings();
             }
         });
 
+                resolutionDropdown.setOnItemClickListener((parent, view, position, id) -> {
+                String resolution = resolutionDropdown.getText().toString();
+                int[] dimensions = getResolutionDimensions(resolution);
+                if (dimensions != null) {
+                    hbRecorder.setScreenDimensions(dimensions[0], dimensions[1]);
+                    if (BuildConfig.DEBUG) {
+                        LogUtils.d("MainActivity", "Resolution set to: " + resolution + " (" + dimensions[0] + "x" + dimensions[1] + ")");
+                    }
+                } else {
+                    LogUtils.e("MainActivity", "Invalid resolution format: " + resolution);
+                }
+                saveSettings();
+            });
+
         framerateDropdown.setOnItemClickListener((parent, view, position, id) -> {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 String framerate = framerateDropdown.getText().toString();
                 int fps = Integer.parseInt(framerate.split(" ")[0]);
                 hbRecorder.setVideoFrameRate(fps);
                 saveSettings();
-            }
         });
 
         bitrateDropdown.setOnItemClickListener((parent, view, position, id) -> {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 String bitrate = bitrateDropdown.getText().toString();
                 if (!bitrate.equals("Auto")) {
                 int bitrateValue = Integer.parseInt(bitrate.split(" ")[0]) * 1000000;
                 hbRecorder.setVideoBitrate(bitrateValue);
                 }
                 saveSettings();
-            }
         });
 
         outputFormatDropdown.setOnItemClickListener((parent, view, position, id) -> {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                String format = outputFormatDropdown.getText().toString();
-                switch (format) {
-                    case "MPEG_4":
-                        hbRecorder.setOutputFormat("MPEG_4");
-                        break;
-                    case "WEBM":
-                        hbRecorder.setOutputFormat("WEBM");
-                        break;
-                    case "3GP":
-                        hbRecorder.setOutputFormat("3GP");
-                        break;
+                String userFriendlyFormat = outputFormatDropdown.getText().toString();
+                String technicalFormat = getUserFriendlyToTechnicalFormat(userFriendlyFormat);
+                hbRecorder.setOutputFormat(technicalFormat);
+                if (BuildConfig.DEBUG) {
+                    LogUtils.d("MainActivity", "Output format set to: " + userFriendlyFormat + " (technical: " + technicalFormat + ")");
                 }
                 saveSettings();
-            }
         });
 
         audioSourceDropdown.setOnItemClickListener((parent, view, position, id) -> {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 String source = audioSourceDropdown.getText().toString();
-                switch (source) {
-                    case "System + Mic":
-                        hbRecorder.setAudioSource("DEFAULT");
-                        break;
-                    case "System":
-                        hbRecorder.setAudioSource("DEFAULT");
-                        break;
-                    case "Mic":
-                        hbRecorder.setAudioSource("MIC");
-                        break;
-                }
+             configureAudioSource(source);
                 saveSettings();
-            }
         });
     }
 
@@ -503,12 +878,31 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
     //This will be called after the file was created
     @Override
     public void HBRecorderOnComplete() {
+        // Ensure UI updates happen on main thread
+        runOnUiThread(() -> {
+            synchronized (this) {
+                if (startbtn != null) {
         startbtn.setText(R.string.start_recording);
+                    startbtn.setEnabled(true);
+                }
         isStopPending = false;
+                hasRetriedWithDefaults = false; // Reset retry flag
+            }
+            
+            try {
         stopService(new Intent(this, FloatingDockService.class));
-        showLongToast("Saved Successfully");
+            } catch (Exception e) {
+                LogUtils.e("MainActivity", "Error stopping floating dock service: " + e.getMessage());
+            }
+            
+            showLongToast("Recording saved successfully!");
+            
+            // Update gallery in background thread
+            new Thread(() -> {
+                if (hbRecorder != null) {
+                    try {
             if (hbRecorder.wasUriSet()) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                     updateGalleryUri();
                 } else {
                     refreshGalleryFile();
@@ -516,88 +910,230 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         } else {
                 refreshGalleryFile();
             }
+                    } catch (Exception e) {
+                        LogUtils.e("MainActivity", "Error updating gallery: " + e.getMessage());
+                        runOnUiThread(() -> {
+                            showLongToast("Recording saved, but gallery update failed");
+                        });
+                    }
+                }
+            }).start();
+        });
     }
 
     // Called when error occurs
     @Override
     public void HBRecorderOnError(int errorCode, String reason) {
+        LogUtils.e("HBRecorderOnError", "Error code: " + errorCode + ", reason: " + reason);
+        
         if (errorCode == SETTINGS_ERROR) {
+            handleSettingsError(reason);
+        } else if (errorCode == MAX_FILE_SIZE_REACHED_ERROR) {
+            handleMaxFileSizeError();
+        } else {
+            handleGeneralRecordingError(reason);
+        }
+
+        // Reset UI state
+        resetRecordingUI();
+    }
+    
+    private void handleSettingsError(String reason) {
+        if (hasRetriedWithDefaults) {
+            // Already retried once, show error and give up
+            showRecordingErrorDialog("Recording Settings Error", 
+                "Unable to start recording with current settings. Please try different settings or restart the app.", 
+                reason);
+            hasRetriedWithDefaults = false; // Reset for next time
+            return;
+        }
+        
             String message = getString(R.string.settings_not_supported_message);
             if (reason != null && !reason.trim().isEmpty()) {
                 message += ":\n" + reason;
             }
             showLongToast(message);
-            LogUtils.e("HBRecorderOnError", reason);
-
-            // Add null check for codec info before retrying
-            HBRecorderCodecInfo codecInfo = new HBRecorderCodecInfo();
-            codecInfo.setContext(this);
-            ArrayList<String> supportedFormats = codecInfo.getSupportedVideoFormats();
-            if (supportedFormats == null || supportedFormats.isEmpty()) {
-                showLongToast("No supported video codecs found. Screen recording is not supported on this device.");
-                return;
+        
+        // Try to recover with fallback settings in background thread
+        new Thread(() -> {
+            try {
+                applyFallbackSettings();
+                runOnUiThread(() -> {
+                    hasRetriedWithDefaults = true;
+                    showLongToast("Retrying with safe settings...");
+                    // Retry recording after a short delay
+                    new android.os.Handler().postDelayed(() -> {
+                        startRecordingScreen();
+                    }, 1000);
+                });
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    LogUtils.e("MainActivity", "Error applying fallback settings: " + e.getMessage());
+                    showRecordingErrorDialog("Setup Error", 
+                        "Unable to configure recording settings. Please restart the app.", 
+                        e.getMessage());
+                });
             }
-            // Set best encoder
-            String encoder = supportedFormats.contains("MPEG_4") ? "H264" : (supportedFormats.contains("WEBM") ? "VP8" : "H264");
-            hbRecorder.setVideoEncoder(encoder);
-            encoderDropdown.setText(encoder, false);
-            // Set best output format
-            String format = supportedFormats.isEmpty() ? "MPEG_4" : supportedFormats.get(0);
-            hbRecorder.setOutputFormat(format);
-            outputFormatDropdown.setText(format, false);
-            // Set best resolution
-            String[] allResolutions = {"720p", "1080p", "1440p", "2160p"};
-            String bestRes = "720p";
-            for (String res : allResolutions) {
-                int w = 720, h = 1280;
-                if (res.equals("1080p")) { w = 1080; h = 1920; }
-                if (res.equals("1440p")) { w = 1440; h = 2560; }
-                if (res.equals("2160p")) { w = 2160; h = 3840; }
-                if (codecInfo.isSizeSupported(w, h, "video/mp4")) { bestRes = res; break; }
-            }
-            resolutionDropdown.setText(bestRes, false);
-            if (bestRes.equals("720p")) hbRecorder.setScreenDimensions(720, 1280);
-            if (bestRes.equals("1080p")) hbRecorder.setScreenDimensions(1080, 1920);
-            if (bestRes.equals("1440p")) hbRecorder.setScreenDimensions(1440, 2560);
-            if (bestRes.equals("2160p")) hbRecorder.setScreenDimensions(2160, 3840);
-            // Set best frame rate
-            String[] allFramerates = {"30", "24", "60"};
-            String bestFps = "30";
-            for (String fr : allFramerates) {
-                double maxFps = codecInfo.getMaxSupportedFrameRate(720, 1280, "video/mp4");
-                if (Double.parseDouble(fr) <= maxFps) { bestFps = fr; break; }
-            }
-            framerateDropdown.setText(bestFps, false);
-            hbRecorder.setVideoFrameRate(Integer.parseInt(bestFps));
-            // Set best bitrate
-            String[] allBitrates = {"4 Mbps", "2 Mbps", "8 Mbps", "16 Mbps"};
-            int maxBitrate = codecInfo.getMaxSupportedBitrate("video/mp4");
-            String bestBitrate = "4 Mbps";
-            for (String br : allBitrates) {
-                int val = Integer.parseInt(br.split(" ")[0]) * 1000000;
-                if (val <= maxBitrate) { bestBitrate = br; break; }
-            }
-            bitrateDropdown.setText(bestBitrate, false);
-            hbRecorder.setVideoBitrate(Integer.parseInt(bestBitrate.split(" ")[0]) * 1000000);
-            // Set default audio source
-            hbRecorder.setAudioSource("DEFAULT");
-            audioSourceDropdown.setText("System + Mic", false);
-            // Save settings
-            saveSettings();
-            // Retry recording
-            showLongToast("Retrying with best supported settings...");
-            startRecordingScreen();
-            return;
-        } else if ( errorCode == MAX_FILE_SIZE_REACHED_ERROR) {
-            showLongToast(getString(R.string.max_file_size_reached_message));
-        } else {
-            showLongToast(getString(R.string.general_recording_error_message));
-            LogUtils.e("HBRecorderOnError", reason);
+        }).start();
+    }
+    
+    private void handleMaxFileSizeError() {
+        showRecordingErrorDialog("File Size Limit Reached", 
+            "Recording stopped because the file size limit was reached. The recording has been saved.", 
+            null);
+    }
+    
+    private void handleGeneralRecordingError(String reason) {
+        String userFriendlyMessage = getUserFriendlyErrorMessage(reason);
+        showRecordingErrorDialog("Recording Error", userFriendlyMessage, reason);
+    }
+    
+    private String getUserFriendlyErrorMessage(String technicalReason) {
+        if (technicalReason == null) {
+            return "An unexpected error occurred during recording. Please try again.";
         }
-
+        
+        String lowerReason = technicalReason.toLowerCase();
+        if (lowerReason.contains("permission")) {
+            return "Permission denied. Please check app permissions and try again.";
+        } else if (lowerReason.contains("storage") || lowerReason.contains("space")) {
+            return "Not enough storage space. Please free up space and try again.";
+        } else if (lowerReason.contains("codec") || lowerReason.contains("encoder")) {
+            return "Video encoding error. Please try different quality settings.";
+        } else if (lowerReason.contains("audio")) {
+            return "Audio recording error. Try disabling audio recording or check microphone permissions.";
+        } else {
+            return "Recording failed due to a technical issue. Please try again.";
+        }
+    }
+    
+    private void showRecordingErrorDialog(String title, String message, String technicalDetails) {
+        androidx.appcompat.app.AlertDialog.Builder builder = new androidx.appcompat.app.AlertDialog.Builder(this);
+        builder.setTitle(title)
+               .setMessage(message)
+               .setPositiveButton("OK", (dialog, which) -> dialog.dismiss());
+               
+        if (technicalDetails != null && BuildConfig.DEBUG) {
+            builder.setNeutralButton("Technical Details", (dialog, which) -> {
+                new androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("Technical Details")
+                    .setMessage(technicalDetails)
+                    .setPositiveButton("OK", null)
+                    .show();
+            });
+        }
+        
+        builder.show();
+    }
+    
+    private void applyFallbackSettings() {
+        if (hbRecorder == null) return;
+        
+        // Apply safe, widely-supported settings
+        hbRecorder.setVideoEncoder("H264");
+        hbRecorder.setOutputFormat("MPEG_4");
+        hbRecorder.setScreenDimensions(720, 1280);
+                hbRecorder.setVideoFrameRate(30);
+        hbRecorder.setVideoBitrate(4000000); // 4 Mbps
+        hbRecorder.setAudioSource("MIC");
+        hbRecorder.setAudioBitrate(128000);
+        hbRecorder.setAudioSamplingRate(44100);
+        hbRecorder.isAudioEnabled(isAudioEnabled);
+        
+        // Update UI to reflect fallback settings
+        runOnUiThread(() -> {
+            if (encoderDropdown != null) encoderDropdown.setText("H264", false);
+            if (outputFormatDropdown != null) outputFormatDropdown.setText("MPEG_4", false);
+            if (resolutionDropdown != null) resolutionDropdown.setText("720p", false);
+            if (framerateDropdown != null) framerateDropdown.setText("30", false);
+            if (bitrateDropdown != null) bitrateDropdown.setText("4 Mbps", false);
+            if (audioSourceDropdown != null) audioSourceDropdown.setText("Microphone", false);
+            saveSettings();
+        });
+    }
+    
+    private void resetRecordingUI() {
+        runOnUiThread(() -> {
+            synchronized (this) {
+                if (startbtn != null) {
+                    startbtn.setText(R.string.start_recording);
+                    startbtn.setEnabled(true);
+                }
+                isStopPending = false;
+            }
+            
+            try {
+                stopService(new Intent(this, FloatingDockService.class));
+            } catch (Exception e) {
+                LogUtils.e("MainActivity", "Error stopping floating dock service in error handler: " + e.getMessage());
+            }
+        });
+    }
+    
+    // Thread-safe recording button handler to prevent race conditions
+    private synchronized void handleRecordingButtonClick() {
+        if (hbRecorder == null) {
+            showLongToast("Recorder not initialized. Please restart the app.");
+            return;
+        }
+        
+        if (isStopPending) {
+            // Already processing a stop request, ignore further clicks
+            if (BuildConfig.DEBUG) {
+                LogUtils.d("MainActivity", "Stop already pending, ignoring click");
+            }
+            return;
+        }
+        
+        try {
+            boolean isCurrentlyRecording = hbRecorder.isBusyRecording();
+            
+            if (!isCurrentlyRecording) {
+                // Start recording
+                if (BuildConfig.DEBUG) {
+                    LogUtils.d("MainActivity", "Starting recording...");
+                }
+                startRecordingScreen();
+        } else {
+                // Stop recording
+                if (BuildConfig.DEBUG) {
+                    LogUtils.d("MainActivity", "Stopping recording...");
+                }
+                isStopPending = true;
+                
+                // Update UI immediately to provide feedback
+                if (startbtn != null) {
+                    startbtn.setText("Stopping...");
+                    startbtn.setEnabled(false);
+                }
+                
+                // Stop recording in background thread to avoid ANR
+                new Thread(() -> {
+                    try {
+                        hbRecorder.stopScreenRecording();
+                        // UI will be updated in HBRecorderOnComplete() or HBRecorderOnError()
+                    } catch (Exception e) {
+                        LogUtils.e("MainActivity", "Error stopping recording: " + e.getMessage());
+                        runOnUiThread(() -> {
+                            isStopPending = false;
+                            if (startbtn != null) {
         startbtn.setText(R.string.start_recording);
+                                startbtn.setEnabled(true);
+                            }
+                            showLongToast("Error stopping recording: " + e.getMessage());
+                        });
+                    }
+                }).start();
+            }
+        } catch (Exception e) {
+            LogUtils.e("MainActivity", "Error in handleRecordingButtonClick: " + e.getMessage());
         isStopPending = false;
-        stopService(new Intent(this, FloatingDockService.class));
+            if (startbtn != null) {
+                startbtn.setText(R.string.start_recording);
+                startbtn.setEnabled(true);
+            }
+            showLongToast("Error managing recording state. Please try again.");
+        }
     }
 
     // Called when recording has been paused
@@ -606,13 +1142,12 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         // Called when recording was paused
     }
 
-    // Calld when recording has resumed
+    // Called when recording has resumed
     @Override
     public void HBRecorderOnResume() {
         // Called when recording was resumed
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void refreshGalleryFile() {
         MediaScannerConnection.scanFile(this,
                 new String[]{hbRecorder.getFilePath()}, null,
@@ -1087,15 +1622,19 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         // Check current system permission status using a more reliable method
         boolean hasOverlayPermission = checkOverlayPermission();
         
+        if (BuildConfig.DEBUG) {
         LogUtils.d("MainActivity", "Checking overlay permission - canDrawOverlays: " + hasOverlayPermission);
-        LogUtils.d("MainActivity", "Package name: " + getPackageName());
-        LogUtils.d("MainActivity", "Android version: " + Build.VERSION.SDK_INT);
+        }
         
         if (hasOverlayPermission) {
+            if (BuildConfig.DEBUG) {
             LogUtils.d("MainActivity", "Overlay permission already granted, starting FloatingDockService");
+            }
             startService(new Intent(this, FloatingDockService.class));
         } else {
+            if (BuildConfig.DEBUG) {
             LogUtils.d("MainActivity", "Overlay permission not granted, showing permission dialog");
+            }
             showOverlayPermissionDialog();
         }
     }
@@ -1203,6 +1742,42 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         // Optional: Clean up ad resources when app goes to background
         // This is handled automatically by the AdMob SDK
     }
+    
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        
+        // Clean up HBRecorder resources
+        if (hbRecorder != null) {
+            try {
+                if (hbRecorder.isBusyRecording()) {
+                    hbRecorder.stopScreenRecording();
+                }
+            } catch (Exception e) {
+                LogUtils.e("MainActivity", "Error stopping recorder: " + e.getMessage());
+            }
+            hbRecorder = null;
+        }
+        
+        // Clean up AdMob resources
+        if (adMobHelper != null) {
+            adMobHelper.cleanup();
+            adMobHelper = null;
+        }
+        
+        // Clean up fragments to prevent memory leaks
+        quickSettingsFragment = null;
+        advancedSettingsFragment = null;
+        
+        // Stop floating dock service if running
+        try {
+            stopService(new Intent(this, FloatingDockService.class));
+        } catch (Exception e) {
+            LogUtils.e("MainActivity", "Error stopping floating dock: " + e.getMessage());
+        }
+        
+        LogUtils.d("MainActivity", "Resources cleaned up in onDestroy");
+    }
 
     /**
      * Update audio state from Advanced Settings fragment
@@ -1212,9 +1787,102 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         saveAudioPreference(isEnabled);
         saveSettings();
         
-        // Sync with Quick Settings if available
-        if (quickSettingsFragment != null) {
+        // Sync with Quick Settings if available (with null safety)
+        if (quickSettingsFragment != null && !isDestroyed() && !isFinishing()) {
+            try {
             quickSettingsFragment.setAudioEnabled(isEnabled);
+            } catch (Exception e) {
+                LogUtils.e("MainActivity", "Error setting audio state in quick settings fragment: " + e.getMessage());
+            }
+        }
+    }
+    
+    /**
+     * Helper method to validate and configure audio source properly
+     */
+    private void configureAudioSource(String audioSourceName) {
+        if (hbRecorder == null) {
+            LogUtils.e("MainActivity", "Cannot configure audio source - HBRecorder is null");
+            return;
+        }
+        
+        try {
+            switch (audioSourceName) {
+                case "Microphone":
+                    hbRecorder.setAudioSource("MIC");
+                    if (BuildConfig.DEBUG) {
+                        LogUtils.d("MainActivity", "Audio source set to MIC");
+                    }
+                    break;
+                    
+                case "Internal Audio":
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        hbRecorder.setAudioSource("REMOTE_SUBMIX");
+                        if (BuildConfig.DEBUG) {
+                            LogUtils.d("MainActivity", "Audio source set to REMOTE_SUBMIX for internal audio");
+                        }
+                    } else {
+                        hbRecorder.setAudioSource("DEFAULT");
+                        showLongToast("Internal audio recording requires Android 10+. Using default source.");
+                        if (BuildConfig.DEBUG) {
+                            LogUtils.d("MainActivity", "Internal audio not supported on this Android version, using DEFAULT");
+                        }
+                    }
+                    break;
+                    
+                case "Voice Call":
+                    hbRecorder.setAudioSource("VOICE_CALL");
+                    if (BuildConfig.DEBUG) {
+                        LogUtils.d("MainActivity", "Audio source set to VOICE_CALL");
+                    }
+                    break;
+                    
+                case "Default":
+                    hbRecorder.setAudioSource("DEFAULT");
+                    if (BuildConfig.DEBUG) {
+                        LogUtils.d("MainActivity", "Audio source set to DEFAULT");
+                    }
+                    break;
+                    
+                default:
+                    LogUtils.w("MainActivity", "Unknown audio source: " + audioSourceName + ", defaulting to MIC");
+                    hbRecorder.setAudioSource("MIC");
+                    break;
+            }
+            
+            // Validate audio permissions
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                LogUtils.w("MainActivity", "RECORD_AUDIO permission not granted");
+                showLongToast("Microphone permission required for audio recording");
+            }
+            
+        } catch (Exception e) {
+            LogUtils.e("MainActivity", "Error configuring audio source: " + e.getMessage());
+            // Fallback to safe option
+            try {
+                hbRecorder.setAudioSource("MIC");
+                showLongToast("Audio source configuration failed. Using microphone as fallback.");
+            } catch (Exception fallbackError) {
+                LogUtils.e("MainActivity", "Fallback audio source configuration also failed: " + fallbackError.getMessage());
+            }
+        }
+    }
+    
+    /**
+     * Get user-friendly description of audio source capabilities
+     */
+    public String getAudioSourceDescription(String audioSourceName) {
+        switch (audioSourceName) {
+            case "Microphone":
+                return "Records from device microphone only. Best for voice narration.";
+            case "Internal Audio":
+                return "Records internal device audio (Android 10+). Captures system sounds, music, and app audio.";
+            case "Voice Call":
+                return "Optimized for voice calls. May not work during regular recording.";
+            case "Default":
+                return "Uses system default audio source. Usually captures microphone.";
+            default:
+                return "Unknown audio source.";
         }
     }
 

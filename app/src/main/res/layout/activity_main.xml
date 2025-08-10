@@ -5,56 +5,51 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/main_background">
+    android:background="?android:attr/colorBackground"
+    android:fitsSystemWindows="true">
 
-    <androidx.core.widget.NestedScrollView
+    <!-- Main Content with proper bottom margin for navigation -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:fillViewport="true">
+        android:orientation="vertical"
+        android:layout_marginBottom="80dp">
 
-        <LinearLayout
+        <!-- TabLayout at the top -->
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tabLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
+            android:background="?android:attr/colorBackground"
+            app:tabGravity="fill"
+            app:tabIndicatorColor="?attr/colorPrimary"
+            app:tabMode="fixed"
+            app:tabSelectedTextColor="?attr/colorPrimary"
+            app:tabTextColor="?android:attr/textColorSecondary"
+            app:tabTextAppearance="@style/TabTextAppearance"
+            android:elevation="4dp"/>
 
-            <!-- Header Section -->
+        <!-- ViewPager for Tab Content -->
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/viewPager"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
+        <!-- Fallback content if ViewPager is not working -->
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:fillViewport="true"
+            android:visibility="gone"
+            android:id="@+id/fallback_content">
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="24dp">
-
-                <com.google.android.material.tabs.TabLayout
-                    android:id="@+id/tabLayout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    app:tabGravity="fill"
-                    app:tabIndicatorColor="@color/colorPrimary"
-                    app:tabMode="fixed"
-                    app:tabSelectedTextColor="@color/colorPrimary"
-                    app:tabTextColor="@color/gray">
-
-                    <com.google.android.material.tabs.TabItem
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Quick" />
-
-                    <com.google.android.material.tabs.TabItem
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Advanced" />
-
-                </com.google.android.material.tabs.TabLayout>
-            </LinearLayout>
-
-            <!-- ViewPager for Tab Content -->
-            <androidx.viewpager2.widget.ViewPager2
-                android:id="@+id/viewPager"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"/>
+                android:orientation="vertical"
+                android:padding="16dp">
 
             <!-- Quick Settings Section -->
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -232,14 +227,20 @@
 
     </androidx.core.widget.NestedScrollView>
 
+    </LinearLayout>
+
+    <!-- Start Button - Positioned above navigation bar -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/button_start"
         style="@style/ButtonStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:layout_margin="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
         android:text="@string/start_recording"
-        android:backgroundTint="@color/colorPrimary"/>
+        android:backgroundTint="@color/colorPrimary"
+        android:elevation="8dp"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

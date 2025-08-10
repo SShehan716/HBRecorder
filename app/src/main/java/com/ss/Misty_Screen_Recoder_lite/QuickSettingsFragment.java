@@ -167,13 +167,25 @@ public class QuickSettingsFragment extends Fragment {
     }
 
     public void setQuality(boolean isHD) {
-        Chip chip = getView().findViewById(isHD ? R.id.hd_chip : R.id.sd_chip);
-        chip.setChecked(true);
+        if (getView() != null && isAdded() && !isDetached()) {
+            try {
+                Chip chip = getView().findViewById(isHD ? R.id.hd_chip : R.id.sd_chip);
+                if (chip != null) {
+                    chip.setChecked(true);
+                }
+            } catch (Exception e) {
+                LogUtils.e("QuickSettingsFragment", "Error setting quality: " + e.getMessage());
+            }
+        }
     }
 
     public void setAudioEnabled(boolean enabled) {
-        if (audioCheckbox.isEnabled()) {
-            audioCheckbox.setChecked(enabled);
+        if (audioCheckbox != null && audioCheckbox.isEnabled() && isAdded() && !isDetached()) {
+            try {
+                audioCheckbox.setChecked(enabled);
+            } catch (Exception e) {
+                LogUtils.e("QuickSettingsFragment", "Error setting audio enabled: " + e.getMessage());
+            }
         }
     }
 } 

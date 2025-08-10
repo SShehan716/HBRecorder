@@ -162,8 +162,10 @@
                     android:layout_height="wrap_content"
                     android:text="Watch Video to Unlock"
                     android:textAllCaps="false"
+                    android:textColor="@color/gray_light"
                     app:icon="@drawable/ic_play_circle"
                     app:iconGravity="textStart"
+                    app:iconTint="@color/gray_light"
                     style="@style/Widget.MaterialComponents.Button"
                     android:visibility="gone"/>
 

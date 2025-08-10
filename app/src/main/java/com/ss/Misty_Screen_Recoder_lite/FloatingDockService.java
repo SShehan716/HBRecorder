@@ -148,8 +148,29 @@ public class FloatingDockService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (floatingView != null) windowManager.removeView(floatingView);
-        if (timerHandler != null && timerRunnable != null) timerHandler.removeCallbacks(timerRunnable);
+        LogUtils.d("FloatingDockService", "onDestroy called - cleaning up resources");
+        
+        // Clean up timer resources
+        if (timerHandler != null && timerRunnable != null) {
+            timerHandler.removeCallbacks(timerRunnable);
+            timerHandler = null;
+            timerRunnable = null;
+        }
+        
+        // Clean up floating view
+        if (floatingView != null && windowManager != null) {
+            try {
+                windowManager.removeView(floatingView);
+            } catch (Exception e) {
+                LogUtils.e("FloatingDockService", "Error removing floating view: " + e.getMessage());
+            }
+            floatingView = null;
+        }
+        
+        // Clear references
+        windowManager = null;
+        
+        LogUtils.d("FloatingDockService", "FloatingDockService cleanup completed");
     }
 
     @Nullable

@@ -176,6 +176,28 @@ public class AdMobHelper {
     }
     
     /**
+     * Clean up resources to prevent memory leaks
+     */
+    public void cleanup() {
+        LogUtils.d(TAG, "Cleaning up AdMobHelper resources");
+        
+        // Clear rewarded ad
+        if (rewardedAd != null) {
+            rewardedAd.setFullScreenContentCallback(null);
+            rewardedAd = null;
+        }
+        
+        // Clear callbacks
+        rewardedLoadCallback = null;
+        
+        // Reset state
+        isLoadingRewarded = false;
+        retryCount = 0;
+        
+        LogUtils.d(TAG, "AdMobHelper cleanup completed");
+    }
+    
+    /**
      * Custom callback interface for rewarded ad loading
      */
     public interface CustomRewardedAdLoadCallback {

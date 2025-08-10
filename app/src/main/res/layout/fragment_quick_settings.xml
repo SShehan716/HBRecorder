@@ -45,6 +45,7 @@
                         android:layout_height="wrap_content"
                         android:text="HD"
                         android:checked="true"
+                        android:textColor="?android:attr/textColorPrimary"
                         style="@style/Widget.MaterialComponents.Chip.Choice"/>
 
                     <com.google.android.material.chip.Chip
@@ -52,6 +53,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="SD"
+                        android:textColor="?android:attr/textColorPrimary"
                         style="@style/Widget.MaterialComponents.Chip.Choice"/>
 
                 </com.google.android.material.chip.ChipGroup>
@@ -110,13 +112,15 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/unlock_audio_button"
+                    style="@style/Widget.MaterialComponents.Button"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Watch Video to Unlock"
                     android:textAllCaps="false"
+                    android:textColor="@color/gray_light"
                     app:icon="@drawable/ic_play_circle"
                     app:iconGravity="textStart"
-                    style="@style/Widget.MaterialComponents.Button"/>
+                    app:iconTint="@color/gray_light" />
 
                 <CheckBox
                     android:id="@+id/audio_checkbox"

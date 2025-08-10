@@ -22,12 +22,31 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // Set custom layout with proper padding
+        setContentView(R.layout.activity_settings);
+        
+        // Enable system window insets to handle action bar properly
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            getWindow().setStatusBarColor(getResources().getColor(R.color.colorPrimary));
+        }
+        
+        // Apply theme based on current dark mode setting
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean isDarkMode = prefs.getBoolean("key_dark_mode", false);
+        if (isDarkMode) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        }
+        
         if (getSupportActionBar()!=null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setElevation(0); // Remove shadow
         }
 
         // load settings fragment
-        getSupportFragmentManager().beginTransaction().replace(android.R.id.content, new MainPreferenceFragment()).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.settings_container, new MainPreferenceFragment()).commit();
     }
 
     public static class MainPreferenceFragment extends PreferenceFragmentCompat implements Preference.OnPreferenceChangeListener, Preference.OnPreferenceClickListener{
@@ -122,6 +141,12 @@ public class SettingsActivity extends AppCompatActivity {
                 SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(requireContext()).edit();
                 editor.putBoolean("key_dark_mode", isDarkMode);
                 editor.apply();
+                
+                // Show feedback to user
+                Toast.makeText(requireContext(), 
+                    isDarkMode ? "Dark mode enabled" : "Light mode enabled", 
+                    Toast.LENGTH_SHORT).show();
+                
                 // Recreate the activity to apply the theme
                 requireActivity().recreate();
                 return true;
