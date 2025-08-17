@@ -1,11 +1,11 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdk 35
+    compileSdk 36
     defaultConfig {
         applicationId "com.ss.Misty_Screen_Recoder_lite"
         minSdk 25
-        targetSdk 35
+        targetSdk 36
         versionCode 10
         versionName "4.5"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
