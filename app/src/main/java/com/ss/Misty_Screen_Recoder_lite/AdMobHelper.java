@@ -138,7 +138,7 @@ public class AdMobHelper {
     /**
      * Show rewarded ad if available, otherwise load and show when ready
      */
-    public void showRewardedAd(Activity activity, OnUserEarnedRewardListener rewardListener) {
+    public void showRewardedAd(Activity activity, OnUserEarnedRewardListener rewardListener, Runnable onFailure) {
         if (rewardedAd != null) {
             rewardedAd.show(activity, rewardListener);
         } else {
@@ -154,9 +154,19 @@ public class AdMobHelper {
                 @Override
                 public void onAdFailedToLoad(String error) {
                     LogUtils.e(TAG, "Rewarded ad failed to load: " + error);
+                    if (onFailure != null) {
+                        onFailure.run();
+                    }
                 }
             });
         }
+    }
+    
+    /**
+     * Show rewarded ad if available, otherwise load and show when ready (backward compatibility)
+     */
+    public void showRewardedAd(Activity activity, OnUserEarnedRewardListener rewardListener) {
+        showRewardedAd(activity, rewardListener, null);
     }
     
     /**

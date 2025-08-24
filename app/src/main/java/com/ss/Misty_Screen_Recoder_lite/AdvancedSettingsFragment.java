@@ -302,6 +302,10 @@ public class AdvancedSettingsFragment extends Fragment {
                     // User successfully watched the ad and earned reward
                     unlockAudioFeature();
                 }
+            }, () -> {
+                // Ad failed to load - enable audio recording anyway
+                unlockAudioFeature();
+                Toast.makeText(requireContext(), "Ad unavailable. Audio recording enabled anyway!", Toast.LENGTH_SHORT).show();
             });
         } else {
             Toast.makeText(requireContext(), "Ad service not available", Toast.LENGTH_SHORT).show();
