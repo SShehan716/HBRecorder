@@ -6,8 +6,8 @@ android {
         applicationId "com.ss.Misty_Screen_Recoder_lite"
         minSdk = 25
         targetSdk = 36
-        versionCode 10
-        versionName "4.5"
+        versionCode 11
+        versionName "4.8"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         
         // Enable vector drawables for smaller APK
@@ -19,16 +19,6 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            
-            // Enable split APKs for different architectures
-            splits {
-                abi {
-                    enable true
-                    reset()
-                    include 'arm64-v8a', 'armeabi-v7a'
-                    universalApk false
-                }
-            }
         }
         
         debug {

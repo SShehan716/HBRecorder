@@ -12,5 +12,14 @@
     <color name="divider">#E0E0E0</color>
     <color name="text_primary">#212121</color>
     <color name="text_secondary">#757575</color>
+    
+    <!-- Toggle and tab colors for light mode -->
+    <color name="toggle_selected_bg">#36013f</color>
+    <color name="toggle_unselected_bg">#F5F5F5</color>
+    <color name="toggle_selected_text">#FFFFFF</color>
+    <color name="toggle_unselected_text">#212121</color>
+    <color name="tab_indicator">#36013f</color>
+    <color name="tab_text_selected">#36013f</color>
+    <color name="tab_text_unselected">#757575</color>
 </resources>
 
