@@ -87,7 +87,7 @@ import com.google.android.material.tabs.TabLayoutMediator;
 * */
 
 @SuppressWarnings({"SameParameterValue"})
-public class MainActivity extends AppCompatActivity implements HBRecorderListener {
+public class MainActivity extends AppCompatActivity implements HBRecorderListener, RecordingCallback {
     //Permissions
     private static final int SCREEN_RECORD_REQUEST_CODE = 1000;
     private static final int PERMISSION_REQUEST_CODE = 1001;
@@ -199,6 +199,8 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         ViewPagerAdapter adapter = new ViewPagerAdapter(this);
         adapter.addFragment(quickSettingsFragment, "Quick");
         adapter.addFragment(advancedSettingsFragment, "Advanced");
+        // Re-enable Smart Recording tab
+        adapter.addFragment(new SmartRecordingFragment(), "Smart");
         viewPager.setAdapter(adapter);
 
         if (BuildConfig.DEBUG) {
@@ -208,9 +210,23 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         // Connect TabLayout with ViewPager
         new TabLayoutMediator(tabLayout, viewPager,
                 (tab, position) -> {
-                    tab.setText(position == 0 ? "Quick" : "Advanced");
+                    String tabTitle;
+                    switch (position) {
+                        case 0:
+                            tabTitle = "Quick";
+                            break;
+                        case 1:
+                            tabTitle = "Advanced";
+                            break;
+                        case 2:
+                            tabTitle = "Smart";
+                            break;
+                        default:
+                            tabTitle = "Unknown";
+                    }
+                    tab.setText(tabTitle);
                     if (BuildConfig.DEBUG) {
-                        LogUtils.d("MainActivity", "Tab " + position + " set to: " + (position == 0 ? "Quick" : "Advanced"));
+                        LogUtils.d("MainActivity", "Tab " + position + " set to: " + tabTitle);
                     }
                 }
         ).attach();
@@ -1582,7 +1598,7 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         }
     }
 
-    private void startScreenRecording() {
+    public void startScreenRecording() {
         // Check overlay permission before starting recording
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
             showOverlayPermissionDialog();
@@ -1592,6 +1608,17 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         MediaProjectionManager mediaProjectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
         Intent permissionIntent = mediaProjectionManager.createScreenCaptureIntent();
         startActivityForResult(permissionIntent, SCREEN_RECORD_REQUEST_CODE);
+    }
+    
+    public void stopScreenRecording() {
+        if (hbRecorder != null) {
+            hbRecorder.stopScreenRecording();
+        }
+    }
+    
+    @Override
+    public boolean isRecording() {
+        return hbRecorder != null && hbRecorder.isBusyRecording();
     }
     
     /**

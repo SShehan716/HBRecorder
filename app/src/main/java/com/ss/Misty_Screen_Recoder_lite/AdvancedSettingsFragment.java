@@ -123,41 +123,68 @@ public class AdvancedSettingsFragment extends Fragment {
         outputFormatDropdown.setAdapter(formatAdapter);
         outputFormatDropdown.setText(userFriendlyFormats.get(0), false);
 
-        // Resolution options (filter by isSizeSupported)
+        // Resolution options (filter by isSizeSupported) - with null check
         String[] allResolutions = {"720p", "1080p", "1440p", "2160p"};
         ArrayList<String> supportedResolutions = new ArrayList<>();
-        for (String res : allResolutions) {
-            int w = 720, h = 1280;
-            if (res.equals("1080p")) { w = 1080; h = 1920; }
-            if (res.equals("1440p")) { w = 1440; h = 2560; }
-            if (res.equals("2160p")) { w = 2160; h = 3840; }
-            if (codecInfo.isSizeSupported(w, h, "video/mp4")) supportedResolutions.add(res);
+        
+        if (codecInfo != null) {
+            for (String res : allResolutions) {
+                int w = 720, h = 1280;
+                if (res.equals("1080p")) { w = 1080; h = 1920; }
+                if (res.equals("1440p")) { w = 1440; h = 2560; }
+                if (res.equals("2160p")) { w = 2160; h = 3840; }
+                try {
+                    if (codecInfo.isSizeSupported(w, h, "video/mp4")) supportedResolutions.add(res);
+                } catch (Exception e) {
+                    // If codec check fails, add the resolution anyway
+                    supportedResolutions.add(res);
+                }
+            }
         }
+        
         if (supportedResolutions.isEmpty()) supportedResolutions.add("720p");
         ArrayAdapter<String> resolutionAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, supportedResolutions);
         resolutionDropdown.setAdapter(resolutionAdapter);
         resolutionDropdown.setText(supportedResolutions.get(0), false);
 
-        // Frame rate options (filter by getMaxSupportedFrameRate)
+        // Frame rate options (filter by getMaxSupportedFrameRate) - with null check
         String[] allFramerates = {"24", "30", "60"};
         ArrayList<String> supportedFramerates = new ArrayList<>();
-        for (String fr : allFramerates) {
-            double maxFps = codecInfo.getMaxSupportedFrameRate(720, 1280, "video/mp4");
-            if (Double.parseDouble(fr) <= maxFps) supportedFramerates.add(fr);
+        
+        if (codecInfo != null) {
+            for (String fr : allFramerates) {
+                try {
+                    double maxFps = codecInfo.getMaxSupportedFrameRate(720, 1280, "video/mp4");
+                    if (Double.parseDouble(fr) <= maxFps) supportedFramerates.add(fr);
+                } catch (Exception e) {
+                    // If codec check fails, add the framerate anyway
+                    supportedFramerates.add(fr);
+                }
+            }
         }
+        
         if (supportedFramerates.isEmpty()) supportedFramerates.add("30");
         ArrayAdapter<String> framerateAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, supportedFramerates);
         framerateDropdown.setAdapter(framerateAdapter);
         framerateDropdown.setText(supportedFramerates.get(0), false);
 
-        // Bitrate options (filter by getMaxSupportedBitrate)
+        // Bitrate options (filter by getMaxSupportedBitrate) - with null check
         String[] allBitrates = {"2 Mbps", "4 Mbps", "8 Mbps", "16 Mbps"};
         ArrayList<String> supportedBitrates = new ArrayList<>();
-        int maxBitrate = codecInfo.getMaxSupportedBitrate("video/mp4");
-        for (String br : allBitrates) {
-            int val = Integer.parseInt(br.split(" ")[0]) * 1000000;
-            if (val <= maxBitrate) supportedBitrates.add(br);
+        
+        if (codecInfo != null) {
+            try {
+                int maxBitrate = codecInfo.getMaxSupportedBitrate("video/mp4");
+                for (String br : allBitrates) {
+                    int val = Integer.parseInt(br.split(" ")[0]) * 1000000;
+                    if (val <= maxBitrate) supportedBitrates.add(br);
+                }
+            } catch (Exception e) {
+                // If codec check fails, add all bitrates
+                supportedBitrates.addAll(java.util.Arrays.asList(allBitrates));
+            }
         }
+        
         if (supportedBitrates.isEmpty()) supportedBitrates.add("4 Mbps");
         ArrayAdapter<String> bitrateAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, supportedBitrates);
         bitrateDropdown.setAdapter(bitrateAdapter);

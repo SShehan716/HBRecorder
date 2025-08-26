@@ -21,5 +21,12 @@
     <color name="tab_indicator">#36013f</color>
     <color name="tab_text_selected">#36013f</color>
     <color name="tab_text_unselected">#757575</color>
+    
+    <!-- Additional colors for Smart Recording feature -->
+    <color name="card_background">#FFFFFF</color>
+    <color name="card_stroke">#E0E0E0</color>
+    <color name="success_green">#4CAF50</color>
+    <color name="warning_orange">#FF9800</color>
+    <color name="error_red">#F44336</color>
 </resources>
 
