@@ -43,20 +43,14 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    
-    // Core Android dependencies (optimized)
-    implementation 'androidx.appcompat:appcompat:1.7.1'
-    implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
-    implementation 'androidx.preference:preference:1.2.1'
-    implementation 'com.google.android.material:material:1.12.0'
-    
-    // AdMob dependency (updated to latest version as per official AdMob guide)
-    implementation 'com.google.android.gms:play-services-ads:24.5.0'
-
-    // Test dependencies (only for debug)
-    debugImplementation 'junit:junit:4.13.2'
-    debugImplementation 'androidx.test:runner:1.7.0'
-    debugImplementation 'androidx.test.espresso:espresso-core:3.7.0'
-    
-    implementation project(path: ':hbrecorder')
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'com.google.android.material:material:1.9.0'
+    implementation 'androidx.viewpager2:viewpager2:1.0.0'
+    implementation 'com.google.android.gms:play-services-ads:22.2.0'
+    implementation project(':hbrecorder')
+    implementation 'com.google.code.gson:gson:2.10.1'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 }

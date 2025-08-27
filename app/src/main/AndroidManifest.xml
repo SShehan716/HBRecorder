@@ -45,7 +45,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".FloatingDockService"
+        <receiver
+            android:name=".SmartRecordingReceiver"
+            android:exported="false" />
+            
+        <service
+            android:name=".FloatingDockService"
             android:exported="false"/>
     </application>
 

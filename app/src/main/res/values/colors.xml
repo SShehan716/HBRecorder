@@ -1,32 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#36013f</color>
-    <color name="colorPrimaryDark">#280137</color>
-    <color name="colorAccent">#421D55</color>
+    <color name="colorPrimary">#6A4C93</color>
+    <color name="colorPrimaryDark">#5A3C83</color>
+    <color name="colorAccent">#FF4081</color>
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
     <color name="gray_light">#F5F5F5</color>
     <color name="gray">#9E9E9E</color>
     <color name="gray_dark">#616161</color>
-    <color name="main_background">#FFFFFF</color>
-    <color name="divider">#E0E0E0</color>
     <color name="text_primary">#212121</color>
     <color name="text_secondary">#757575</color>
+    <color name="main_background">#FAFAFA</color>
     
-    <!-- Toggle and tab colors for light mode -->
-    <color name="toggle_selected_bg">#36013f</color>
-    <color name="toggle_unselected_bg">#F5F5F5</color>
+    <!-- Toggle colors -->
+    <color name="toggle_selected_bg">#6A4C93</color>
+    <color name="toggle_unselected_bg">#E0E0E0</color>
     <color name="toggle_selected_text">#FFFFFF</color>
-    <color name="toggle_unselected_text">#212121</color>
-    <color name="tab_indicator">#36013f</color>
-    <color name="tab_text_selected">#36013f</color>
+    <color name="toggle_unselected_text">#757575</color>
+    
+    <!-- Tab colors -->
+    <color name="tab_indicator">#6A4C93</color>
+    <color name="tab_text_selected">#6A4C93</color>
     <color name="tab_text_unselected">#757575</color>
     
-    <!-- Additional colors for Smart Recording feature -->
+    <!-- Card colors -->
     <color name="card_background">#FFFFFF</color>
     <color name="card_stroke">#E0E0E0</color>
+    
+    <!-- Status colors -->
     <color name="success_green">#4CAF50</color>
     <color name="warning_orange">#FF9800</color>
     <color name="error_red">#F44336</color>
+    
+    <!-- Modern UI colors -->
+    <color name="background_primary">#F8F9FA</color>
+    <color name="background_secondary">#FFFFFF</color>
+    <color name="primary_color">#6A4C93</color>
+    <color name="secondary_color">#9C27B0</color>
+    <color name="surface_color">#FFFFFF</color>
+    <color name="switch_thumb">#FFFFFF</color>
+    <color name="switch_track">#E0E0E0</color>
+    <color name="switch_track_checked">#6A4C93</color>
+    <color name="divider_color">#E0E0E0</color>
+    <color name="ripple_color">#1F000000</color>
+    <color name="overlay_color">#80000000</color>
 </resources>
 
