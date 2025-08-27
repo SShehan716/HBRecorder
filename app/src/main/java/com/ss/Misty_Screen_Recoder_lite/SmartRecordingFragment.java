@@ -24,6 +24,12 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.speech.SpeechRecognizer;
+import android.speech.RecognizerIntent;
+import android.speech.RecognitionListener;
+import android.content.pm.PackageManager;
+import androidx.core.app.ActivityCompat;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -62,6 +68,8 @@ public class SmartRecordingFragment extends Fragment {
     
     // Voice command state
     private boolean isVoiceEnabled = false;
+    private SpeechRecognizer speechRecognizer;
+    private boolean isListening = false;
     
     /**
      * Represents a scheduled recording task
@@ -275,12 +283,37 @@ public class SmartRecordingFragment extends Fragment {
      * Enable voice commands
      */
     private void enableVoiceCommands() {
+        if (!SpeechRecognizer.isRecognitionAvailable(requireContext())) {
+            Toast.makeText(getContext(), "Speech recognition not available", Toast.LENGTH_LONG).show();
+            voiceCommandSwitch.setChecked(false);
+            return;
+        }
+        if (ActivityCompat.checkSelfPermission(requireContext(), android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(getContext(), "Microphone permission required for voice commands", Toast.LENGTH_LONG).show();
+            voiceCommandSwitch.setChecked(false);
+            return;
+        }
+        if (speechRecognizer == null) {
+            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(requireContext());
+            speechRecognizer.setRecognitionListener(new RecognitionListener() {
+                @Override public void onReadyForSpeech(Bundle params) { statusText.setText("Listening for: start/stop/schedule ..."); }
+                @Override public void onBeginningOfSpeech() {}
+                @Override public void onRmsChanged(float rmsdB) {}
+                @Override public void onBufferReceived(byte[] buffer) {}
+                @Override public void onEndOfSpeech() {}
+                @Override public void onError(int error) { isListening = false; if (isVoiceEnabled) startVoiceRecognition(); }
+                @Override public void onResults(Bundle results) {
+                    isListening = false;
+                    java.util.ArrayList<String> list = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                    if (list != null && !list.isEmpty()) handleVoiceCommand(list.get(0));
+                    if (isVoiceEnabled) startVoiceRecognition();
+                }
+                @Override public void onPartialResults(Bundle partialResults) {}
+                @Override public void onEvent(int eventType, Bundle params) {}
+            });
+        }
+        startVoiceRecognition();
         Toast.makeText(getContext(), "Voice commands enabled", Toast.LENGTH_SHORT).show();
-        LogUtils.d(TAG, "Voice commands enabled");
-        
-        // In a real implementation, this would start speech recognition
-        // For now, we'll show a message about the feature
-        statusText.setText("Voice commands are now active. Say 'start recording' or 'stop recording'");
     }
     
     /**
@@ -289,6 +322,10 @@ public class SmartRecordingFragment extends Fragment {
     private void disableVoiceCommands() {
         Toast.makeText(getContext(), "Voice commands disabled", Toast.LENGTH_SHORT).show();
         LogUtils.d(TAG, "Voice commands disabled");
+        if (speechRecognizer != null) {
+            try { speechRecognizer.stopListening(); } catch (Exception ignored) {}
+            isListening = false;
+        }
         updateStatusText();
     }
     
@@ -307,6 +344,56 @@ public class SmartRecordingFragment extends Fragment {
             "• 'Stop recording'\n" +
             "• 'Schedule recording in 5 minutes'", 
             Toast.LENGTH_LONG).show();
+        startVoiceRecognition();
+    }
+
+    private void startVoiceRecognition() {
+        if (speechRecognizer == null || isListening || !isAdded()) return;
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, java.util.Locale.getDefault());
+        intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+        try {
+            speechRecognizer.startListening(intent);
+            isListening = true;
+        } catch (Exception ignored) {}
+    }
+
+    private void handleVoiceCommand(String commandRaw) {
+        if (commandRaw == null) return;
+        String command = commandRaw.toLowerCase(java.util.Locale.getDefault());
+        if (command.contains("start") && command.contains("record")) {
+            if (getActivity() instanceof RecordingCallback) {
+                ((RecordingCallback) getActivity()).startScreenRecording();
+                Toast.makeText(getContext(), "Starting recording", Toast.LENGTH_SHORT).show();
+            }
+            return;
+        }
+        // broader stop intents: stop/end/finish/pause + (record|screen|video) OR phrase starts with stop
+        boolean hasStopWord = command.contains("stop") || command.contains("end") || command.contains("finish") || command.contains("pause") || command.contains("halt");
+        boolean mentionsRecording = command.contains("record") || command.contains("screen") || command.contains("video");
+        if (hasStopWord && (mentionsRecording || command.startsWith("stop"))) {
+            if (getActivity() instanceof RecordingCallback) {
+                ((RecordingCallback) getActivity()).stopScreenRecording();
+                Toast.makeText(getContext(), "Stopping recording", Toast.LENGTH_SHORT).show();
+            }
+            return;
+        }
+        // schedule in X minutes
+        if (command.contains("schedule") || command.contains("in ")) {
+            // naive extract first number and unit
+            String digits = command.replaceAll("[^0-9]", " ").trim();
+            int minutes = 0;
+            try { minutes = Integer.parseInt(digits.split(" ")[0]); } catch (Exception ignored) {}
+            if (command.contains("hour")) minutes *= 60;
+            if (minutes > 0) {
+                scheduleTimeInput.setText(minutes + "m");
+                scheduleDescriptionInput.setText("Voice scheduled recording");
+                scheduleRecording();
+                return;
+            }
+        }
+        Toast.makeText(getContext(), "Say: start/stop recording, or schedule in 5 minutes", Toast.LENGTH_SHORT).show();
     }
     
     /**
@@ -438,6 +525,10 @@ public class SmartRecordingFragment extends Fragment {
             requireContext().unregisterReceiver(recordingReceiver);
         } catch (Exception e) {
             LogUtils.e(TAG, "Error unregistering receiver: " + e.getMessage());
+        }
+        if (speechRecognizer != null) {
+            try { speechRecognizer.destroy(); } catch (Exception ignored) {}
+            speechRecognizer = null;
         }
     }
 }
