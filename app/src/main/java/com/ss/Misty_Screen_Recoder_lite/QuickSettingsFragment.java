@@ -18,6 +18,7 @@ import com.google.android.gms.ads.OnUserEarnedRewardListener;
 import com.google.android.gms.ads.rewarded.RewardItem;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
+import com.ss.Misty_Screen_Recoder_lite.LogUtils;
 
 public class QuickSettingsFragment extends Fragment {
     private ChipGroup qualityChipGroup;
@@ -125,31 +126,13 @@ public class QuickSettingsFragment extends Fragment {
                     unlockHDFeature();
                 }
             }, () -> {
-                // Ad failed to load - show error message and restore locked state
-                Toast.makeText(getContext(), "Ad unavailable. Please try again later.", Toast.LENGTH_SHORT).show();
-                hdChip.setEnabled(true);
-                updateHDChipState(); // This will show "HD 🔒" since feature is still locked
-                
-                // Ensure SD is selected since HD unlock failed
-                if (sdChip != null) {
-                    sdChip.setChecked(true);
-                    if (listener != null) {
-                        listener.onQualityChanged(false);
-                    }
-                }
+                // Ad failed to load - enable HD feature anyway
+                Toast.makeText(getContext(), "Ad unavailable. HD feature enabled for free!", Toast.LENGTH_SHORT).show();
+                unlockHDFeature(); // Enable HD feature even when ad fails
             });
         } else {
-            Toast.makeText(getContext(), "Ad service not available", Toast.LENGTH_SHORT).show();
-            hdChip.setEnabled(true);
-            updateHDChipState(); // This will show "HD 🔒" since feature is still locked
-            
-            // Ensure SD is selected since HD unlock failed
-            if (sdChip != null) {
-                sdChip.setChecked(true);
-                if (listener != null) {
-                    listener.onQualityChanged(false);
-                }
-            }
+            Toast.makeText(getContext(), "Ad service not available. HD feature enabled for free!", Toast.LENGTH_SHORT).show();
+            unlockHDFeature(); // Enable HD feature even when ad service is not available
         }
     }
 
@@ -210,17 +193,35 @@ public class QuickSettingsFragment extends Fragment {
     private void updateHDChipState() {
         boolean isUnlocked = isHDUnlocked();
         
+        LogUtils.d("QuickSettingsFragment", "updateHDChipState called - isUnlocked: " + isUnlocked);
+        
         if (!isUnlocked) {
             // HD is locked - show lock state
             hdChip.setText("HD");
-            hdChip.setChipIcon(getResources().getDrawable(R.drawable.ic_lock_small));
-            hdChip.setChipIconVisible(true);
+            try {
+                hdChip.setChipIconResource(R.drawable.ic_lock_small);
+                hdChip.setChipIconVisible(true);
+                LogUtils.d("QuickSettingsFragment", "Lock icon set successfully using setChipIconResource");
+            } catch (Exception e) {
+                // Fallback to emoji if drawable fails
+                hdChip.setText("HD 🔒");
+                hdChip.setChipIconVisible(false);
+                LogUtils.e("QuickSettingsFragment", "Error setting lock icon: " + e.getMessage());
+            }
             hdChip.setEnabled(true);
+            // Ensure SD is selected when HD is locked
+            if (sdChip != null && !sdChip.isChecked()) {
+                sdChip.setChecked(true);
+                if (listener != null) {
+                    listener.onQualityChanged(false);
+                }
+            }
         } else {
             // HD is unlocked - show normal state
             hdChip.setText("HD");
             hdChip.setChipIconVisible(false);
             hdChip.setEnabled(true);
+            LogUtils.d("QuickSettingsFragment", "HD unlocked - icon hidden");
         }
     }
 

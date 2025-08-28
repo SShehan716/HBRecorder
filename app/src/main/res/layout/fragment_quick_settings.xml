@@ -44,17 +44,16 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="HD"
-                        android:checked="true"
-                        android:textColor="?android:attr/textColorPrimary"
-                        style="@style/Widget.MaterialComponents.Chip.Choice"/>
+                        android:checked="false"
+                        style="@style/CustomChipStyle"/>
 
                     <com.google.android.material.chip.Chip
                         android:id="@+id/sd_chip"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="SD"
-                        android:textColor="?android:attr/textColorPrimary"
-                        style="@style/Widget.MaterialComponents.Chip.Choice"/>
+                        android:checked="true"
+                        style="@style/CustomChipStyle"/>
 
                 </com.google.android.material.chip.ChipGroup>
 
