@@ -233,8 +233,7 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
             }
         }, 1000); // Check after 1 second
 
-        // Initialize AdMob (lazy loading) - MUST be before setupFragments
-        initializeAds();
+
 
         // Set up fragments
         setupFragments();
@@ -242,13 +241,7 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         // Check overlay permission on app start
         checkOverlayPermissionOnStart();
         
-        // Preload ads after a delay to improve user experience
-        // This happens after the UI is ready and user can interact
-        new android.os.Handler().postDelayed(() -> {
-            if (adMobHelper != null) {
-                adMobHelper.preloadAds(this);
-            }
-        }, 2000); // 2 second delay
+
 
         // Initialize codec info for setup (removed excessive debug logging for performance)
         if (BuildConfig.DEBUG) {
@@ -1541,27 +1534,7 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
                 saveSettings();
             }
 
-            @Override
-            public void onAudioUnlocked() {
-                // Audio feature was unlocked via rewarded ad
-                // Update advanced settings audio switch
-                if (advancedAudioSwitch != null) {
-                    advancedAudioSwitch.setEnabled(true);
-                    advancedAudioSwitch.setAlpha(1.0f);
-                }
-                // Enable audio recording by default when unlocked
-                isAudioEnabled = true;
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    hbRecorder.isAudioEnabled(true);
-                }
-                saveAudioPreference(true);
-                saveSettings();
-                
-                // Refresh advanced settings audio controls
-                if (advancedSettingsFragment != null) {
-                    advancedSettingsFragment.refreshAudioControlsState();
-                }
-            }
+
         });
 
         // Set up AdvancedSettingsFragment
@@ -1570,9 +1543,11 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
             // Settings have been changed, update UI if needed
         });
 
-        // Pass AdMob helper to both fragments for rewarded ads
+        // Initialize AdMob for HD unlock feature
+        initializeAds();
+        
+        // Pass AdMob helper to QuickSettingsFragment for HD unlock
         quickSettingsFragment.setAdMobHelper(adMobHelper);
-        advancedSettingsFragment.setAdMobHelper(adMobHelper);
     }
 
     private void startRecording() {
@@ -1595,7 +1570,7 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
     }
     
     /**
-     * Initialize AdMob ads (lazy loading)
+     * Initialize AdMob ads for HD unlock feature
      */
     private void initializeAds() {
         adMobHelper = new AdMobHelper();
@@ -1603,6 +1578,8 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         // Preload rewarded ads for better user experience
         adMobHelper.preloadAds(this);
     }
+    
+
     
 
     
@@ -1730,9 +1707,14 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
     @Override
     protected void onResume() {
         super.onResume();
-        // Preload ads when app becomes active (user returns to app)
-        if (adMobHelper != null) {
-            adMobHelper.preloadAds(this);
+        
+        // Refresh HD chip state in case unlock status has changed
+        if (quickSettingsFragment != null && !isFinishing() && !isDestroyed()) {
+            try {
+                quickSettingsFragment.refreshHDChipState();
+            } catch (Exception e) {
+                LogUtils.e("MainActivity", "Error refreshing HD chip state: " + e.getMessage());
+            }
         }
     }
     
@@ -1764,6 +1746,8 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
             adMobHelper.cleanup();
             adMobHelper = null;
         }
+        
+
         
         // Clean up fragments to prevent memory leaks
         quickSettingsFragment = null;
@@ -1887,26 +1871,8 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
     }
 
     public boolean isAudioUnlocked() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        boolean isUnlocked = prefs.getBoolean("audio_feature_unlocked", false);
-        
-        if (isUnlocked) {
-            // Check if 24 hours have passed since unlock
-            long unlockTime = prefs.getLong("audio_unlock_time", 0);
-            long currentTime = System.currentTimeMillis();
-            long oneDayInMillis = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-            
-            if (currentTime - unlockTime > oneDayInMillis) {
-                // Expired, reset to locked state
-                prefs.edit()
-                        .putBoolean("audio_feature_unlocked", false)
-                        .putLong("audio_unlock_time", 0)
-                        .apply();
-                return false;
-            }
-            return true;
-        }
-        return false;
+        // Audio recording is now always available
+        return true;
     }
 
     /**
@@ -1944,12 +1910,6 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         saveAudioPreference(true);
         saveSettings();
         
-        // Refresh both fragments' audio controls
-        if (quickSettingsFragment != null) {
-            quickSettingsFragment.updateAudioFeatureState();
-        }
-        if (advancedSettingsFragment != null) {
-            advancedSettingsFragment.refreshAudioControlsState();
-        }
+        // Audio recording is now always available - no need to refresh controls
     }
 }

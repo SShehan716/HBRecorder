@@ -76,61 +76,21 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
-                    android:layout_marginBottom="12dp">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Record Audio"
-                        android:textSize="16sp"
-                        android:textColor="@color/text_primary"
-                        android:textStyle="bold"/>
-
-                    <ImageView
-                        android:id="@+id/audio_lock_icon"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
-                        android:src="@drawable/ic_lock"
-                        android:contentDescription="Audio feature locked"
-                        android:tint="@color/gray"/>
-
-                </LinearLayout>
-
                 <TextView
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Watch a short video to unlock audio recording feature"
-                    android:textSize="14sp"
-                    android:textColor="@color/text_secondary"
-                    android:layout_marginBottom="16dp"/>
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/unlock_audio_button"
-                    style="@style/Widget.MaterialComponents.Button"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Watch Video to Unlock"
-                    android:textAllCaps="false"
-                    android:textColor="@color/gray_light"
-                    app:icon="@drawable/ic_play_circle"
-                    app:iconGravity="textStart"
-                    app:iconTint="@color/gray_light" />
+                    android:text="Audio Recording"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_primary"
+                    android:textStyle="bold"
+                    android:layout_marginBottom="12dp"/>
 
                 <CheckBox
                     android:id="@+id/audio_checkbox"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Record Audio"
-                    android:checked="false"
-                    android:enabled="false"
-                    android:layout_marginTop="12dp"
-                    android:alpha="0.5"/>
+                    android:checked="false"/>
 
             </LinearLayout>
 
