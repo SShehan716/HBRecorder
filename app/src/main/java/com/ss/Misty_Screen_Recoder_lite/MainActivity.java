@@ -548,6 +548,49 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
     }
     
     /**
+     * Get the best HD resolution from supported resolutions
+     * Priority: 2160p > 1440p > 1080p > 720p
+     */
+    private int[] getBestHDResolution(ArrayList<String> supportedResolutions) {
+        if (supportedResolutions.contains("2160p")) {
+            return new int[]{2160, 3840};
+        } else if (supportedResolutions.contains("1440p")) {
+            return new int[]{1440, 2560};
+        } else if (supportedResolutions.contains("1080p")) {
+            return new int[]{1080, 1920};
+        } else if (supportedResolutions.contains("720p")) {
+            return new int[]{720, 1280};
+        } else if (supportedResolutions.contains("480p")) {
+            return new int[]{480, 854};
+        } else {
+            // Fallback to 720p
+            return new int[]{720, 1280};
+        }
+    }
+    
+    /**
+     * Get the best SD resolution from supported resolutions
+     * Priority: 720p > 480p (avoid using HD resolutions for SD)
+     */
+    private int[] getBestSDResolution(ArrayList<String> supportedResolutions) {
+        if (supportedResolutions.contains("720p")) {
+            return new int[]{720, 1280};
+        } else if (supportedResolutions.contains("480p")) {
+            return new int[]{480, 854};
+        } else if (supportedResolutions.contains("1080p")) {
+            // If only HD resolutions are available, use the lowest one
+            return new int[]{1080, 1920};
+        } else if (supportedResolutions.contains("1440p")) {
+            return new int[]{1440, 2560};
+        } else if (supportedResolutions.contains("2160p")) {
+            return new int[]{2160, 3840};
+        } else {
+            // Fallback to 720p
+            return new int[]{720, 1280};
+        }
+    }
+    
+    /**
      * Get supported frame rates based on device capabilities
      */
     private ArrayList<String> getSupportedFramerates(HBRecorderCodecInfo codecInfo, ArrayList<String> supportedFormats, int deviceWidth, int deviceHeight) {
@@ -1498,6 +1541,23 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
     }
 
     private void setupFragments() {
+        // Get device's best supported resolutions for Quick Settings
+        HBRecorderCodecInfo codecInfo = new HBRecorderCodecInfo();
+        codecInfo.setContext(this);
+        ArrayList<String> supportedFormats = codecInfo.getSupportedVideoFormats();
+        
+        // Get device dimensions
+        android.util.DisplayMetrics displayMetrics = new android.util.DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        int deviceWidth = displayMetrics.widthPixels;
+        int deviceHeight = displayMetrics.heightPixels;
+        
+        ArrayList<String> supportedResolutions = getSupportedResolutions(codecInfo, supportedFormats, deviceWidth, deviceHeight);
+        
+        // Determine best HD and SD resolutions
+        int[] hdDimensions = getBestHDResolution(supportedResolutions);
+        int[] sdDimensions = getBestSDResolution(supportedResolutions);
+        
         // Set up QuickSettingsFragment
         quickSettingsFragment.setOnSettingsChangedListener(new QuickSettingsFragment.OnSettingsChangedListener() {
             @Override
@@ -1505,18 +1565,21 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
                 wasHDSelected = isHD;
                 if (isHD) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        hbRecorder.setScreenDimensions(1080, 1920);
-                    }
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        hbRecorder.setScreenDimensions(hdDimensions[0], hdDimensions[1]);
+                        // Use higher bitrate for HD
                         hbRecorder.setVideoBitrate(8000000);
                     }
                 } else {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        hbRecorder.setScreenDimensions(720, 1280);
-                    }
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        hbRecorder.setScreenDimensions(sdDimensions[0], sdDimensions[1]);
+                        // Use lower bitrate for SD
                         hbRecorder.setVideoBitrate(4000000);
                     }
+                }
+                
+                if (BuildConfig.DEBUG) {
+                    LogUtils.d("MainActivity", "Quality changed to " + (isHD ? "HD" : "SD") + 
+                        " - Resolution: " + (isHD ? hdDimensions[0] + "x" + hdDimensions[1] : sdDimensions[0] + "x" + sdDimensions[1]));
                 }
             }
 

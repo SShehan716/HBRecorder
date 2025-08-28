@@ -63,6 +63,7 @@ public class QuickSettingsFragment extends Fragment {
 
         setupListeners();
         updateHDChipState();
+        loadAudioPreference();
     }
 
     private void setupListeners() {
@@ -225,6 +226,22 @@ public class QuickSettingsFragment extends Fragment {
         }
     }
 
+    private void loadAudioPreference() {
+        // Check if fragment is attached and has context
+        if (!isAdded() || getContext() == null) {
+            return;
+        }
+        
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        // Default to true (enabled) for first install, then use saved preference
+        boolean audioEnabled = prefs.getBoolean(PREF_AUDIO_ENABLED, true);
+        audioCheckbox.setChecked(audioEnabled);
+        
+        if (BuildConfig.DEBUG) {
+            LogUtils.d("QuickSettingsFragment", "Audio preference loaded: " + audioEnabled);
+        }
+    }
+    
     private void saveAudioPreference(boolean enabled) {
         // Check if fragment is attached and has context
         if (!isAdded() || getContext() == null) {

@@ -68,6 +68,7 @@ public class AdvancedSettingsFragment extends Fragment {
 
         setupDropdowns();
         setupListeners();
+        loadAudioPreference();
     }
 
     private void setupDropdowns() {
@@ -102,17 +103,36 @@ public class AdvancedSettingsFragment extends Fragment {
         outputFormatDropdown.setAdapter(formatAdapter);
         outputFormatDropdown.setText(userFriendlyFormats.get(0), false);
 
-        // Resolution options (filter by isSizeSupported)
-        String[] allResolutions = {"720p", "1080p", "1440p", "2160p"};
+        // Resolution options (filter by isSizeSupported) - using robust detection like MainActivity
+        String bestFormat = getBestSupportedFormat(supportedFormats);
+        String[] allResolutions = {"480p", "720p", "1080p", "1440p", "2160p"};
         ArrayList<String> supportedResolutions = new ArrayList<>();
+        
         for (String res : allResolutions) {
-            int w = 720, h = 1280;
+            int w = 480, h = 854;  // Default for 480p
+            if (res.equals("720p")) { w = 720; h = 1280; }
             if (res.equals("1080p")) { w = 1080; h = 1920; }
             if (res.equals("1440p")) { w = 1440; h = 2560; }
             if (res.equals("2160p")) { w = 2160; h = 3840; }
-            if (codecInfo.isSizeSupported(w, h, "video/mp4")) supportedResolutions.add(res);
+            
+            if (codecInfo.isSizeSupported(w, h, bestFormat)) {
+                supportedResolutions.add(res);
+                if (BuildConfig.DEBUG) {
+                    LogUtils.d("AdvancedSettingsFragment", "Resolution " + res + " (" + w + "x" + h + ") supported");
+                }
+            } else {
+                if (BuildConfig.DEBUG) {
+                    LogUtils.d("AdvancedSettingsFragment", "Resolution " + res + " not supported");
+                }
+            }
         }
-        if (supportedResolutions.isEmpty()) supportedResolutions.add("720p");
+        
+        if (supportedResolutions.isEmpty()) {
+            supportedResolutions.add("720p");
+            if (BuildConfig.DEBUG) {
+                LogUtils.w("AdvancedSettingsFragment", "No resolutions detected, using 720p fallback");
+            }
+        }
         ArrayAdapter<String> resolutionAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, supportedResolutions);
         resolutionDropdown.setAdapter(resolutionAdapter);
         resolutionDropdown.setText(supportedResolutions.get(0), false);
@@ -240,6 +260,7 @@ public class AdvancedSettingsFragment extends Fragment {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && hbRecorder != null) {
                 hbRecorder.isAudioEnabled(isChecked);
                 notifySettingsChanged();
+                saveAudioPreference(isChecked);
                 
                 // Notify main activity to update its state (with null safety)
                 if (getActivity() instanceof MainActivity && isAdded() && !isDetached()) {
@@ -270,6 +291,32 @@ public class AdvancedSettingsFragment extends Fragment {
         audioCheckbox.setChecked(audioEnabled);
     }
 
+    private void loadAudioPreference() {
+        // Check if fragment is attached and has context
+        if (!isAdded() || getContext() == null) {
+            return;
+        }
+        
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        // Default to true (enabled) for first install, then use saved preference
+        boolean audioEnabled = prefs.getBoolean(PREF_AUDIO_ENABLED, true);
+        audioCheckbox.setChecked(audioEnabled);
+        
+        if (BuildConfig.DEBUG) {
+            LogUtils.d("AdvancedSettingsFragment", "Audio preference loaded: " + audioEnabled);
+        }
+    }
+    
+    private void saveAudioPreference(boolean enabled) {
+        // Check if fragment is attached and has context
+        if (!isAdded() || getContext() == null) {
+            return;
+        }
+        
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        prefs.edit().putBoolean(PREF_AUDIO_ENABLED, enabled).apply();
+    }
+    
     public void refreshAudioControlsState() {
         // No audio unlock logic, always enabled
     }
@@ -388,6 +435,24 @@ public class AdvancedSettingsFragment extends Fragment {
             return "H263";
         } else {
             return userFriendlyEncoder; // Return as is if no match
+        }
+    }
+    
+    /**
+     * Get the best supported format from the list of supported formats
+     * Priority: MPEG_4 > WEBM > THREE_GPP
+     */
+    private String getBestSupportedFormat(ArrayList<String> supportedFormats) {
+        if (supportedFormats.contains("MPEG_4")) {
+            return "MPEG_4";
+        } else if (supportedFormats.contains("WEBM")) {
+            return "WEBM";
+        } else if (supportedFormats.contains("THREE_GPP")) {
+            return "THREE_GPP";
+        } else if (!supportedFormats.isEmpty()) {
+            return supportedFormats.get(0); // Return first available
+        } else {
+            return "MPEG_4"; // Fallback
         }
     }
 } 
