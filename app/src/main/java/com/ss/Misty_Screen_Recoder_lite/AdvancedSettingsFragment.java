@@ -747,17 +747,21 @@ public class AdvancedSettingsFragment extends Fragment {
         
         // Refresh the dropdown to remove lock icon and auto-select highest
         setupDropdowns();
-        ArrayList<String> items = getAdapterItems(resolutionDropdown);
-        if (!items.isEmpty()) {
-            String highest = getHighestResolution(items);
-            resolutionDropdown.setText(highest, false);
-            int[] dims = getResolutionDimensions(highest);
-            if (dims != null && hbRecorder != null) {
-                hbRecorder.setScreenDimensions(dims[0], dims[1]);
+        
+        // Force refresh the adapter to remove lock icon
+        resolutionDropdown.post(() -> {
+            ArrayList<String> items = getAdapterItems(resolutionDropdown);
+            if (!items.isEmpty()) {
+                String highest = getHighestResolution(items);
+                resolutionDropdown.setText(highest, false);
+                int[] dims = getResolutionDimensions(highest);
+                if (dims != null && hbRecorder != null) {
+                    hbRecorder.setScreenDimensions(dims[0], dims[1]);
+                }
+                saveSettings();
+                notifySettingsChanged();
             }
-            saveSettings();
-            notifySettingsChanged();
-        }
+        });
         
         Toast.makeText(getContext(), "High resolution unlocked!", Toast.LENGTH_SHORT).show();
     }
@@ -772,16 +776,20 @@ public class AdvancedSettingsFragment extends Fragment {
         
         // Refresh the dropdown to remove lock icon and auto-select highest
         setupDropdowns();
-        ArrayList<String> items = getAdapterItems(framerateDropdown);
-        if (!items.isEmpty()) {
-            String highest = getHighestFramerate(items);
-            framerateDropdown.setText(highest, false);
-            if (hbRecorder != null) {
-                hbRecorder.setVideoFrameRate(Integer.parseInt(highest));
+        
+        // Force refresh the adapter to remove lock icon
+        framerateDropdown.post(() -> {
+            ArrayList<String> items = getAdapterItems(framerateDropdown);
+            if (!items.isEmpty()) {
+                String highest = getHighestFramerate(items);
+                framerateDropdown.setText(highest, false);
+                if (hbRecorder != null) {
+                    hbRecorder.setVideoFrameRate(Integer.parseInt(highest));
+                }
+                saveSettings();
+                notifySettingsChanged();
             }
-            saveSettings();
-            notifySettingsChanged();
-        }
+        });
         
         Toast.makeText(getContext(), "High frame rate unlocked!", Toast.LENGTH_SHORT).show();
     }
@@ -796,17 +804,21 @@ public class AdvancedSettingsFragment extends Fragment {
         
         // Refresh the dropdown to remove lock icon and auto-select highest
         setupDropdowns();
-        ArrayList<String> items = getAdapterItems(bitrateDropdown);
-        if (!items.isEmpty()) {
-            String highest = getHighestBitrate(items);
-            bitrateDropdown.setText(highest, false);
-            if (hbRecorder != null) {
-                int bitrateValue = Integer.parseInt(highest.split(" ")[0]) * 1000000;
-                hbRecorder.setVideoBitrate(bitrateValue);
+        
+        // Force refresh the adapter to remove lock icon
+        bitrateDropdown.post(() -> {
+            ArrayList<String> items = getAdapterItems(bitrateDropdown);
+            if (!items.isEmpty()) {
+                String highest = getHighestBitrate(items);
+                bitrateDropdown.setText(highest, false);
+                if (hbRecorder != null) {
+                    int bitrateValue = Integer.parseInt(highest.split(" ")[0]) * 1000000;
+                    hbRecorder.setVideoBitrate(bitrateValue);
+                }
+                saveSettings();
+                notifySettingsChanged();
             }
-            saveSettings();
-            notifySettingsChanged();
-        }
+        });
         
         Toast.makeText(getContext(), "High bitrate unlocked!", Toast.LENGTH_SHORT).show();
     }

@@ -1250,21 +1250,55 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         
         // Get selected resolution
         String selectedResolution = resolutionDropdown.getText().toString();
-        String[] dimensions = selectedResolution.split("x");
-        if (dimensions.length == 2) {
-            hbRecorder.setScreenDimensions(Integer.parseInt(dimensions[0]), Integer.parseInt(dimensions[1]));
+        if (!selectedResolution.isEmpty()) {
+            try {
+                String[] dimensions = selectedResolution.split("x");
+                if (dimensions.length == 2 && !dimensions[0].isEmpty() && !dimensions[1].isEmpty()) {
+                    hbRecorder.setScreenDimensions(Integer.parseInt(dimensions[0]), Integer.parseInt(dimensions[1]));
+                } else {
+                    hbRecorder.setScreenDimensions(1280, 720); // Default fallback
+                }
+            } catch (NumberFormatException e) {
+                hbRecorder.setScreenDimensions(1280, 720); // Default fallback
+            }
+        } else {
+            hbRecorder.setScreenDimensions(1280, 720); // Default fallback
         }
 
         // Get selected framerate
         String selectedFramerate = framerateDropdown.getText().toString();
-        int fps = Integer.parseInt(selectedFramerate.split(" ")[0]);
-        hbRecorder.setVideoFrameRate(fps);
+        if (!selectedFramerate.isEmpty()) {
+            try {
+                String[] parts = selectedFramerate.split(" ");
+                if (parts.length > 0 && !parts[0].isEmpty()) {
+                    int fps = Integer.parseInt(parts[0]);
+                    hbRecorder.setVideoFrameRate(fps);
+                } else {
+                    hbRecorder.setVideoFrameRate(30); // Default fallback
+                }
+            } catch (NumberFormatException e) {
+                hbRecorder.setVideoFrameRate(30); // Default fallback
+            }
+        } else {
+            hbRecorder.setVideoFrameRate(30); // Default fallback
+        }
 
         // Get selected bitrate
         String selectedBitrate = bitrateDropdown.getText().toString();
-        if (!selectedBitrate.equals("Auto")) {
-            int bitrate = Integer.parseInt(selectedBitrate.split(" ")[0]) * 1000000;
-            hbRecorder.setVideoBitrate(bitrate);
+        if (!selectedBitrate.isEmpty() && !selectedBitrate.equals("Auto")) {
+            try {
+                String[] parts = selectedBitrate.split(" ");
+                if (parts.length > 0 && !parts[0].isEmpty()) {
+                    int bitrate = Integer.parseInt(parts[0]) * 1000000;
+                    hbRecorder.setVideoBitrate(bitrate);
+                } else {
+                    hbRecorder.setVideoBitrate(4000000); // Default fallback
+                }
+            } catch (NumberFormatException e) {
+                hbRecorder.setVideoBitrate(4000000); // Default fallback
+            }
+        } else {
+            hbRecorder.setVideoBitrate(4000000); // Default fallback
         }
 
         hbRecorder.setAudioBitrate(128000);
