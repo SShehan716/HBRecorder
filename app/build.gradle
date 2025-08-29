@@ -52,6 +52,8 @@ dependencies {
     
     // AdMob dependency (updated to latest version as per official AdMob guide)
     implementation 'com.google.android.gms:play-services-ads:24.5.0'
+    // Google UMP SDK for consent
+    implementation 'com.google.android.ump:user-messaging-platform:3.0.0'
 
     // Test dependencies (only for debug)
     debugImplementation 'junit:junit:4.13.2'

@@ -162,6 +162,9 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         
         setContentView(R.layout.activity_main);
 
+        // UMP: request consent (non-blocking) before any ad usage
+        ConsentManager.getInstance(this).requestConsentIfNeeded(this, null);
+
         requestAllPermissions();
         requestNotificationPermission();
         initViews();
@@ -937,17 +940,22 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
             new Thread(() -> {
                 if (hbRecorder != null) {
                     try {
-            if (hbRecorder.wasUriSet()) {
+                        if (hbRecorder.wasUriSet()) {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    updateGalleryUri();
-                } else {
-                    refreshGalleryFile();
-                }
-        } else {
-                refreshGalleryFile();
-            }
+                                updateGalleryUri();
+                            } else {
+                                refreshGalleryFile();
+                            }
+                        } else {
+                            refreshGalleryFile();
+                        }
+                    } catch (SecurityException e) {
+                        LogUtils.e("MainActivity", "SecurityException updating gallery: " + e.getMessage(), e);
+                        runOnUiThread(() -> {
+                            showLongToast("Recording saved successfully! Gallery update failed due to permissions.");
+                        });
                     } catch (Exception e) {
-                        LogUtils.e("MainActivity", "Error updating gallery: " + e.getMessage());
+                        LogUtils.e("MainActivity", "Error updating gallery: " + e.getMessage(), e);
                         runOnUiThread(() -> {
                             showLongToast("Recording saved, but gallery update failed");
                         });
@@ -1197,9 +1205,28 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
 
     @RequiresApi(api = Build.VERSION_CODES.Q)
     private void updateGalleryUri(){
-        contentValues.clear();
-        contentValues.put(MediaStore.Video.Media.IS_PENDING, 0);
-        getContentResolver().update(mUri, contentValues, null, null);
+        try {
+            if (mUri != null && contentValues != null) {
+                contentValues.clear();
+                contentValues.put(MediaStore.Video.Media.IS_PENDING, 0);
+                
+                // Add error handling for ContentResolver update
+                int updatedRows = getContentResolver().update(mUri, contentValues, null, null);
+                
+                if (BuildConfig.DEBUG) {
+                    LogUtils.d("MainActivity", "Gallery URI updated successfully. Rows affected: " + updatedRows);
+                }
+            } else {
+                LogUtils.w("MainActivity", "Cannot update gallery URI: mUri or contentValues is null");
+            }
+        } catch (SecurityException e) {
+            LogUtils.e("MainActivity", "SecurityException updating gallery URI: " + e.getMessage(), e);
+            // This is not critical - the video file is still saved, just not immediately visible in gallery
+            // The file will appear in gallery after a media scan or app restart
+        } catch (Exception e) {
+            LogUtils.e("MainActivity", "Error updating gallery URI: " + e.getMessage(), e);
+            // Non-critical error - video recording was successful
+        }
     }
 
     //Start recording screen
@@ -1606,11 +1633,25 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
             // Settings have been changed, update UI if needed
         });
 
+        // Load saved settings into AdvancedSettingsFragment
+        SharedPreferences prefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
+        String savedEncoder = prefs.getString(KEY_VIDEO_ENCODER, "H264");
+        String savedResolution = prefs.getString(KEY_RESOLUTION, "720p");
+        String savedFramerate = prefs.getString(KEY_FRAMERATE, "30");
+        String savedBitrate = prefs.getString(KEY_BITRATE, "4 Mbps");
+        String savedFormat = prefs.getString(KEY_OUTPUT_FORMAT, "MPEG_4");
+        String savedAudioSource = prefs.getString(KEY_AUDIO_SOURCE, "System + Mic");
+        boolean savedAudioEnabled = prefs.getBoolean(KEY_AUDIO_ENABLED, true);
+        
+        advancedSettingsFragment.loadSettings(savedEncoder, savedResolution, savedFramerate, 
+                                            savedBitrate, savedFormat, savedAudioSource, savedAudioEnabled);
+
         // Initialize AdMob for HD unlock feature
         initializeAds();
         
-        // Pass AdMob helper to QuickSettingsFragment for HD unlock
+        // Pass AdMob helper to fragments for unlock features
         quickSettingsFragment.setAdMobHelper(adMobHelper);
+        advancedSettingsFragment.setAdMobHelper(adMobHelper);
     }
 
     private void startRecording() {
@@ -1663,17 +1704,23 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         boolean hasOverlayPermission = checkOverlayPermission();
         
         if (BuildConfig.DEBUG) {
-        LogUtils.d("MainActivity", "Checking overlay permission - canDrawOverlays: " + hasOverlayPermission);
+            LogUtils.d("MainActivity", "Checking overlay permission - canDrawOverlays: " + hasOverlayPermission);
         }
         
         if (hasOverlayPermission) {
             if (BuildConfig.DEBUG) {
-            LogUtils.d("MainActivity", "Overlay permission already granted, starting FloatingDockService");
+                LogUtils.d("MainActivity", "Overlay permission already granted, starting FloatingDockService");
             }
-            startService(new Intent(this, FloatingDockService.class));
+            try {
+                startService(new Intent(this, FloatingDockService.class));
+            } catch (Exception e) {
+                LogUtils.e("MainActivity", "Error starting FloatingDockService: " + e.getMessage(), e);
+                // If service fails to start, show permission dialog as fallback
+                showOverlayPermissionDialog();
+            }
         } else {
             if (BuildConfig.DEBUG) {
-            LogUtils.d("MainActivity", "Overlay permission not granted, showing permission dialog");
+                LogUtils.d("MainActivity", "Overlay permission not granted, showing permission dialog");
             }
             showOverlayPermissionDialog();
         }

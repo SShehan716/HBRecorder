@@ -35,8 +35,30 @@ public class FloatingDockService extends Service {
     public void onCreate() {
         super.onCreate();
         LogUtils.d("FloatingDockService", "Service onCreate called");
+        
+        // Check overlay permission before attempting to add floating view
+        if (!checkOverlayPermission()) {
+            LogUtils.e("FloatingDockService", "Overlay permission not granted, stopping service");
+            stopSelf();
+            return;
+        }
+        
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
-        addFloatingDock();
+        if (windowManager == null) {
+            LogUtils.e("FloatingDockService", "WindowManager is null, stopping service");
+            stopSelf();
+            return;
+        }
+        
+        // Add a small delay to ensure service is fully initialized
+        new Handler().postDelayed(() -> {
+            try {
+                addFloatingDock();
+            } catch (Exception e) {
+                LogUtils.e("FloatingDockService", "Error adding floating dock: " + e.getMessage(), e);
+                stopSelf();
+            }
+        }, 100); // 100ms delay
     }
 
     private void addFloatingDock() {
@@ -141,8 +163,16 @@ public class FloatingDockService extends Service {
         recorderIcon.setVisibility(View.VISIBLE);
         recorderBar.setVisibility(View.GONE);
 
-        windowManager.addView(floatingView, params);
-        LogUtils.d("FloatingDockService", "Floating dock view added to window manager");
+        try {
+            windowManager.addView(floatingView, params);
+            LogUtils.d("FloatingDockService", "Floating dock view added to window manager successfully");
+        } catch (Exception e) {
+            LogUtils.e("FloatingDockService", "Error adding floating view to window manager: " + e.getMessage(), e);
+            // Clean up resources
+            floatingView = null;
+            windowManager = null;
+            stopSelf();
+        }
     }
 
     @Override
@@ -171,6 +201,23 @@ public class FloatingDockService extends Service {
         windowManager = null;
         
         LogUtils.d("FloatingDockService", "FloatingDockService cleanup completed");
+    }
+
+    /**
+     * Check if overlay permission is granted
+     */
+    private boolean checkOverlayPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            try {
+                return android.provider.Settings.canDrawOverlays(this);
+            } catch (Exception e) {
+                LogUtils.e("FloatingDockService", "Error checking overlay permission: " + e.getMessage());
+                return false;
+            }
+        } else {
+            // For older versions, assume permission is granted
+            return true;
+        }
     }
 
     @Nullable

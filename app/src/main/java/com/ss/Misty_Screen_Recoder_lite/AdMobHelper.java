@@ -69,7 +69,7 @@ public class AdMobHelper {
         isLoadingRewarded = true;
         rewardedLoadCallback = callback;
         
-        AdRequest adRequest = new AdRequest.Builder().build();
+        AdRequest adRequest = ConsentManager.getInstance(context).buildAdRequest(context);
         
         RewardedAd.load(context, REWARDED_AD_UNIT_ID, adRequest,
                 new RewardedAdLoadCallback() {
@@ -139,6 +139,11 @@ public class AdMobHelper {
      * Show rewarded ad if available, otherwise load and show when ready
      */
     public void showRewardedAd(Activity activity, OnUserEarnedRewardListener rewardListener, Runnable onFailure) {
+        // Ensure consent has been handled
+        if (!ConsentManager.getInstance(activity).isConsentReady(activity)) {
+            ConsentManager.getInstance(activity).requestConsentIfNeeded(activity, () -> showRewardedAd(activity, rewardListener, onFailure));
+            return;
+        }
         if (rewardedAd != null) {
             rewardedAd.show(activity, rewardListener);
         } else {
