@@ -646,7 +646,7 @@ public class AdvancedSettingsFragment extends Fragment {
                 .setNegativeButton("Cancel", null)
                 .show();
     }
-    
+
     private void showUnlockBitrateDialog() {
         if (!isAdded() || getContext() == null) {
             return;
