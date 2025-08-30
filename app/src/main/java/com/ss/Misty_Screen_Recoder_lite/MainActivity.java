@@ -378,7 +378,7 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         outputFormatDropdown.setAdapter(formatAdapter);
         outputFormatDropdown.setText(defaultFormats[0], false);
         
-        String[] audioSources = {"Microphone", "Internal Audio", "Voice Call", "Default"};
+        String[] audioSources = {"Microphone", "Voice Call", "Default"};
         ArrayAdapter<String> audioSourceAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, audioSources);
         audioSourceDropdown.setAdapter(audioSourceAdapter);
         audioSourceDropdown.setText(audioSources[0], false);
@@ -433,7 +433,7 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         bitrateDropdown.setText(supportedBitrates.get(0), false);
 
         // 6. Audio source options - corrected for proper functionality
-        String[] audioSources = {"Microphone", "Internal Audio", "Voice Call", "Default"};
+        String[] audioSources = {"Microphone", "Voice Call", "Default"};
         ArrayAdapter<String> audioSourceAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, audioSources);
         audioSourceDropdown.setAdapter(audioSourceAdapter);
         audioSourceDropdown.setText(audioSources[0], false);
@@ -1943,20 +1943,7 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
                     }
                     break;
                     
-                case "Internal Audio":
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        hbRecorder.setAudioSource("REMOTE_SUBMIX");
-                        if (BuildConfig.DEBUG) {
-                            LogUtils.d("MainActivity", "Audio source set to REMOTE_SUBMIX for internal audio");
-                        }
-                    } else {
-                        hbRecorder.setAudioSource("DEFAULT");
-                        showLongToast("Internal audio recording requires Android 10+. Using default source.");
-                        if (BuildConfig.DEBUG) {
-                            LogUtils.d("MainActivity", "Internal audio not supported on this Android version, using DEFAULT");
-                        }
-                    }
-                    break;
+
                     
                 case "Voice Call":
                     hbRecorder.setAudioSource("VOICE_CALL");
@@ -2003,8 +1990,7 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         switch (audioSourceName) {
             case "Microphone":
                 return "Records from device microphone only. Best for voice narration.";
-            case "Internal Audio":
-                return "Records internal device audio (Android 10+). Captures system sounds, music, and app audio.";
+
             case "Voice Call":
                 return "Optimized for voice calls. May not work during regular recording.";
             case "Default":

@@ -291,7 +291,7 @@ public class AdvancedSettingsFragment extends Fragment {
         bitrateDropdown.setText(supportedBitrates.get(0), false);
 
         // Audio source options - corrected for proper functionality
-        String[] audioSources = {"Microphone", "Internal Audio", "Voice Call", "Default"};
+        String[] audioSources = {"Microphone", "Voice Call", "Default"};
         ArrayAdapter<String> audioSourceAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, audioSources);
         audioSourceDropdown.setAdapter(audioSourceAdapter);
         audioSourceDropdown.setText(audioSources[0], false);
@@ -433,15 +433,6 @@ public class AdvancedSettingsFragment extends Fragment {
                 switch (source) {
                     case "Microphone":
                         hbRecorder.setAudioSource("MIC");
-                        break;
-                    case "Internal Audio":
-                        // Use REMOTE_SUBMIX for internal audio capture (Android 10+)
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                            hbRecorder.setAudioSource("REMOTE_SUBMIX");
-                        } else {
-                            hbRecorder.setAudioSource("DEFAULT");
-                            Toast.makeText(requireContext(), "Internal audio recording requires Android 10+. Using default source.", Toast.LENGTH_LONG).show();
-                        }
                         break;
                     case "Voice Call":
                         hbRecorder.setAudioSource("VOICE_CALL");
@@ -670,7 +661,7 @@ public class AdvancedSettingsFragment extends Fragment {
                 .setNegativeButton("Cancel", null)
                 .show();
     }
-    
+
     private void showRewardedAdToUnlockResolution() {
         if (!isAdded() || getContext() == null) {
             return;
