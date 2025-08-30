@@ -9,6 +9,7 @@
         <item name="android:windowBackground">@color/main_background</item>
         <item name="android:textColorPrimary">@color/text_primary</item>
         <item name="android:textColorSecondary">@color/text_secondary</item>
+        <item name="android:windowLightStatusBar">?attr/isLightTheme</item>
     </style>
 
     <style name="CheckboxStyle" parent="Theme.MaterialComponents.Light">
