@@ -124,15 +124,23 @@ public class QuickSettingsFragment extends Fragment {
                 @Override
                 public void onUserEarnedReward(@NonNull RewardItem rewardItem) {
                     // User successfully watched the ad and earned reward
-                    unlockHDFeature();
+                    if (isAdded() && getContext() != null) {
+                        unlockHDFeature();
+                    }
                 }
             }, () -> {
                 // Ad failed to load - enable HD feature anyway
-                Toast.makeText(getContext(), "Ad unavailable. HD feature enabled for free!", Toast.LENGTH_SHORT).show();
-                unlockHDFeature(); // Enable HD feature even when ad fails
+                if (isAdded() && getContext() != null) {
+                    // Reset UI state first
+                    hdChip.setEnabled(true);
+                    updateHDChipState();
+                    
+                    // Unlock feature silently when ad fails
+                    unlockHDFeature(); // Enable HD feature even when ad fails
+                }
             });
         } else {
-            Toast.makeText(getContext(), "Ad service not available. HD feature enabled for free!", Toast.LENGTH_SHORT).show();
+            // Ad service not available - unlock feature silently
             unlockHDFeature(); // Enable HD feature even when ad service is not available
         }
     }
@@ -151,16 +159,21 @@ public class QuickSettingsFragment extends Fragment {
                 .putLong(PREF_HD_UNLOCK_TIME, currentTime)
                 .apply();
         
-        // Update UI
-        updateHDChipState();
-        
-        // Enable HD selection
-        hdChip.setChecked(true);
-        if (listener != null) {
-            listener.onQualityChanged(true);
+        // Update UI on main thread
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(() -> {
+                // Update UI
+                updateHDChipState();
+                
+                // Enable HD selection
+                hdChip.setChecked(true);
+                if (listener != null) {
+                    listener.onQualityChanged(true);
+                }
+                
+                Toast.makeText(getContext(), "HD recording quality unlocked! It will expire in 24 hours.", Toast.LENGTH_LONG).show();
+            });
         }
-        
-        Toast.makeText(getContext(), "HD recording quality unlocked! It will expire in 24 hours.", Toast.LENGTH_LONG).show();
     }
 
     private boolean isHDUnlocked() {

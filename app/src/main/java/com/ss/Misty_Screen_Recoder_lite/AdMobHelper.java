@@ -144,7 +144,9 @@ public class AdMobHelper {
             ConsentManager.getInstance(activity).requestConsentIfNeeded(activity, () -> showRewardedAd(activity, rewardListener, onFailure));
             return;
         }
+        
         if (rewardedAd != null) {
+            // Ad is ready, show it immediately
             rewardedAd.show(activity, rewardListener);
         } else {
             LogUtils.d(TAG, "Rewarded ad not ready, loading...");
@@ -153,6 +155,11 @@ public class AdMobHelper {
                 public void onAdLoaded() {
                     if (rewardedAd != null) {
                         rewardedAd.show(activity, rewardListener);
+                    } else {
+                        LogUtils.e(TAG, "Ad loaded but rewardedAd is null");
+                        if (onFailure != null) {
+                            onFailure.run();
+                        }
                     }
                 }
                 

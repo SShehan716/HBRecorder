@@ -674,12 +674,11 @@ public class AdvancedSettingsFragment extends Fragment {
                     unlockHighestResolution();
                 }
             }, () -> {
-                // Ad failed to load - enable feature anyway
-                Toast.makeText(getContext(), "Ad unavailable. High resolution enabled for free!", Toast.LENGTH_SHORT).show();
+                // Ad failed to load - enable feature anyway (silent)
                 unlockHighestResolution();
             });
         } else {
-            Toast.makeText(getContext(), "Ad service not available. High resolution enabled for free!", Toast.LENGTH_SHORT).show();
+            // Ad service not available - enable feature anyway (silent)
             unlockHighestResolution();
         }
     }
@@ -696,12 +695,11 @@ public class AdvancedSettingsFragment extends Fragment {
                     unlockHighestFramerate();
                 }
             }, () -> {
-                // Ad failed to load - enable feature anyway
-                Toast.makeText(getContext(), "Ad unavailable. High frame rate enabled for free!", Toast.LENGTH_SHORT).show();
+                // Ad failed to load - enable feature anyway (silent)
                 unlockHighestFramerate();
             });
         } else {
-            Toast.makeText(getContext(), "Ad service not available. High frame rate enabled for free!", Toast.LENGTH_SHORT).show();
+            // Ad service not available - enable feature anyway (silent)
             unlockHighestFramerate();
         }
     }
@@ -718,12 +716,11 @@ public class AdvancedSettingsFragment extends Fragment {
                     unlockHighestBitrate();
                 }
             }, () -> {
-                // Ad failed to load - enable feature anyway
-                Toast.makeText(getContext(), "Ad unavailable. High bitrate enabled for free!", Toast.LENGTH_SHORT).show();
+                // Ad failed to load - enable feature anyway (silent)
                 unlockHighestBitrate();
             });
         } else {
-            Toast.makeText(getContext(), "Ad service not available. High bitrate enabled for free!", Toast.LENGTH_SHORT).show();
+            // Ad service not available - enable feature anyway (silent)
             unlockHighestBitrate();
         }
     }
@@ -953,6 +950,65 @@ public class AdvancedSettingsFragment extends Fragment {
             return supportedFormats.get(0); // Return first available
         } else {
             return "MPEG_4"; // Fallback
+        }
+    }
+
+    // Debug method to test unlock functionality
+    private void debugUnlockResolution() {
+        if (!isAdded() || getContext() == null) {
+            LogUtils.e("AdvancedSettingsFragment", "Fragment not attached or context null");
+            return;
+        }
+        
+        LogUtils.d("AdvancedSettingsFragment", "Debug: Starting resolution unlock test");
+        
+        // Check current unlock state
+        boolean isUnlocked = isHighestResolutionUnlocked();
+        LogUtils.d("AdvancedSettingsFragment", "Debug: Current unlock state: " + isUnlocked);
+        
+        // Force unlock
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        prefs.edit().putBoolean(PREF_HIGHEST_RESOLUTION_UNLOCKED, true).apply();
+        
+        LogUtils.d("AdvancedSettingsFragment", "Debug: Unlock state saved, now updating UI");
+        
+        // Update UI
+        if (getActivity() != null) {
+            getActivity().runOnUiThread(() -> {
+                try {
+                    // Get current items from dropdown
+                    ArrayList<String> items = getAdapterItems(resolutionDropdown);
+                    LogUtils.d("AdvancedSettingsFragment", "Debug: Current items: " + items);
+                    
+                    if (!items.isEmpty()) {
+                        String highest = getHighestResolution(items);
+                        LogUtils.d("AdvancedSettingsFragment", "Debug: Highest resolution: " + highest);
+                        
+                        // Create new adapter without lock
+                        ArrayAdapter<String> newAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, items);
+                        resolutionDropdown.setAdapter(newAdapter);
+                        
+                        // Set the highest resolution
+                        resolutionDropdown.setText(highest, false);
+                        
+                        // Apply to HBRecorder
+                        int[] dims = getResolutionDimensions(highest);
+                        if (dims != null && hbRecorder != null) {
+                            hbRecorder.setScreenDimensions(dims[0], dims[1]);
+                            LogUtils.d("AdvancedSettingsFragment", "Debug: HBRecorder dimensions set to: " + dims[0] + "x" + dims[1]);
+                        }
+                        
+                        saveSettings();
+                        notifySettingsChanged();
+                        
+                        LogUtils.d("AdvancedSettingsFragment", "Debug: Resolution unlock completed successfully");
+                    } else {
+                        LogUtils.e("AdvancedSettingsFragment", "Debug: No items found in dropdown");
+                    }
+                } catch (Exception e) {
+                    LogUtils.e("AdvancedSettingsFragment", "Debug: Error during unlock: " + e.getMessage());
+                }
+            });
         }
     }
 } 

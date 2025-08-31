@@ -147,6 +147,9 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
 
     private boolean hasRetriedWithDefaults = false;
 
+    // Add dialog reference to dismiss it later
+    private androidx.appcompat.app.AlertDialog overlayPermissionDialog;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -1411,8 +1414,7 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
             case OVERLAY_PERMISSION_REQUEST_CODE:
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(this)) {
                     hasPermissions = true;
-                    // Don't automatically start recording - just show success message
-                    Toast.makeText(this, "Floating dock permission granted", Toast.LENGTH_SHORT).show();
+                                    // Permission granted - no need for toast
                 } else {
                     hasPermissions = false;
                     showLongToast("No permission for overlay");
@@ -1442,9 +1444,25 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
                     startbtn.setText(R.string.start_recording);
                 }
         } else if (requestCode == OVERLAY_PERMISSION_REQUEST_CODE) {
-            // User returned from overlay permission screen - just check if permission was granted
+            // User returned from overlay permission screen - check if permission was granted
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && Settings.canDrawOverlays(this)) {
-                Toast.makeText(this, "Floating dock permission granted", Toast.LENGTH_SHORT).show();
+                // Permission was granted - dismiss dialog and show success message
+                if (overlayPermissionDialog != null && overlayPermissionDialog.isShowing()) {
+                    overlayPermissionDialog.dismiss();
+                    overlayPermissionDialog = null;
+                }
+                // Permission granted - no need for toast
+                
+                // Start floating dock service if recording is in progress
+                if (hbRecorder != null && hbRecorder.isBusyRecording()) {
+                    checkAndStartFloatingDock();
+                }
+            } else {
+                // Permission was not granted - keep dialog open or show message
+                if (overlayPermissionDialog != null && overlayPermissionDialog.isShowing()) {
+                    // Dialog is still open, user can try again or cancel
+                    Toast.makeText(this, "Permission not granted. Please enable it to use floating controls.", Toast.LENGTH_LONG).show();
+                }
             }
         }
     }
@@ -1776,11 +1794,12 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
                })
                .setNegativeButton("Cancel", (dialog, which) -> {
                    dialog.dismiss();
+                   overlayPermissionDialog = null;
                    Toast.makeText(this, "Some features may not work without overlay permission", Toast.LENGTH_LONG).show();
                });
         
-        androidx.appcompat.app.AlertDialog dialog = builder.create();
-        dialog.show();
+        overlayPermissionDialog = builder.create();
+        overlayPermissionDialog.show();
     }
     
     /**
@@ -1827,11 +1846,7 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         LogUtils.d("MainActivity", "Build.VERSION.SDK_INT: " + Build.VERSION.SDK_INT);
         LogUtils.d("MainActivity", "===============================");
         
-        if (hasPermission) {
-            Toast.makeText(this, "Overlay permission is GRANTED", Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(this, "Overlay permission is NOT GRANTED", Toast.LENGTH_SHORT).show();
-        }
+        // Debug permission status - no need for toasts
     }
     
     /**
