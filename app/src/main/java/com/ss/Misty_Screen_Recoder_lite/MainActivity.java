@@ -165,8 +165,11 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         
         setContentView(R.layout.activity_main);
 
-        // UMP: request consent (non-blocking) before any ad usage
-        ConsentManager.getInstance(this).requestConsentIfNeeded(this, null);
+        // UMP: request consent (BLOCKING) before any ad usage
+        ConsentManager.getInstance(this).requestConsentIfNeeded(this, () -> {
+            // Only initialize ads AFTER consent is obtained
+            initializeAds();
+        });
 
         requestAllPermissions();
         requestNotificationPermission();
@@ -1698,12 +1701,12 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         advancedSettingsFragment.loadSettings(savedEncoder, savedResolution, savedFramerate, 
                                             savedBitrate, savedFormat, savedAudioSource, savedAudioEnabled);
 
-        // Initialize AdMob for HD unlock feature
-        initializeAds();
-        
-        // Pass AdMob helper to fragments for unlock features
-        quickSettingsFragment.setAdMobHelper(adMobHelper);
-        advancedSettingsFragment.setAdMobHelper(adMobHelper);
+        // AdMob initialization moved to consent callback
+        // Pass AdMob helper to fragments for unlock features (will be set after consent)
+        if (adMobHelper != null) {
+            quickSettingsFragment.setAdMobHelper(adMobHelper);
+            advancedSettingsFragment.setAdMobHelper(adMobHelper);
+        }
     }
 
     private void startRecording() {
@@ -1726,13 +1729,21 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
     }
     
     /**
-     * Initialize AdMob ads for HD unlock feature
+     * Initialize AdMob ads for HD unlock feature (only after consent)
      */
     private void initializeAds() {
         adMobHelper = new AdMobHelper();
         
-        // Preload rewarded ads for better user experience
-        adMobHelper.preloadAds(this);
+        // Pass AdMob helper to fragments for unlock features
+        if (quickSettingsFragment != null) {
+            quickSettingsFragment.setAdMobHelper(adMobHelper);
+        }
+        if (advancedSettingsFragment != null) {
+            advancedSettingsFragment.setAdMobHelper(adMobHelper);
+        }
+        
+        // Don't preload ads - load only when needed to prevent invalid traffic
+        LogUtils.d("MainActivity", "AdMob initialized after consent");
     }
     
 

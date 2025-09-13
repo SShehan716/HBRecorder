@@ -674,12 +674,16 @@ public class AdvancedSettingsFragment extends Fragment {
                     unlockHighestResolution();
                 }
             }, () -> {
-                // Ad failed to load - enable feature anyway (silent)
-                unlockHighestResolution();
+                // Ad failed to load - do NOT unlock; notify user
+                if (isAdded() && getContext() != null) {
+                    Toast.makeText(getContext(), "Ad failed to load. Please try again later.", Toast.LENGTH_SHORT).show();
+                }
             });
         } else {
-            // Ad service not available - enable feature anyway (silent)
-            unlockHighestResolution();
+            // Ad service not available - do NOT unlock; notify user
+            if (isAdded() && getContext() != null) {
+                Toast.makeText(getContext(), "Ad service unavailable. Please try again later.", Toast.LENGTH_SHORT).show();
+            }
         }
     }
     
@@ -695,12 +699,16 @@ public class AdvancedSettingsFragment extends Fragment {
                     unlockHighestFramerate();
                 }
             }, () -> {
-                // Ad failed to load - enable feature anyway (silent)
-                unlockHighestFramerate();
+                // Ad failed to load - do NOT unlock; notify user
+                if (isAdded() && getContext() != null) {
+                    Toast.makeText(getContext(), "Ad failed to load. Please try again later.", Toast.LENGTH_SHORT).show();
+                }
             });
         } else {
-            // Ad service not available - enable feature anyway (silent)
-            unlockHighestFramerate();
+            // Ad service not available - do NOT unlock; notify user
+            if (isAdded() && getContext() != null) {
+                Toast.makeText(getContext(), "Ad service unavailable. Please try again later.", Toast.LENGTH_SHORT).show();
+            }
         }
     }
     
@@ -716,12 +724,16 @@ public class AdvancedSettingsFragment extends Fragment {
                     unlockHighestBitrate();
                 }
             }, () -> {
-                // Ad failed to load - enable feature anyway (silent)
-                unlockHighestBitrate();
+                // Ad failed to load - do NOT unlock; notify user
+                if (isAdded() && getContext() != null) {
+                    Toast.makeText(getContext(), "Ad failed to load. Please try again later.", Toast.LENGTH_SHORT).show();
+                }
             });
         } else {
-            // Ad service not available - enable feature anyway (silent)
-            unlockHighestBitrate();
+            // Ad service not available - do NOT unlock; notify user
+            if (isAdded() && getContext() != null) {
+                Toast.makeText(getContext(), "Ad service unavailable. Please try again later.", Toast.LENGTH_SHORT).show();
+            }
         }
     }
     

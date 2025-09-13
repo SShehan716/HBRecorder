@@ -129,19 +129,20 @@ public class QuickSettingsFragment extends Fragment {
                     }
                 }
             }, () -> {
-                // Ad failed to load - enable HD feature anyway
+                // Ad failed to load - do NOT unlock; notify user
                 if (isAdded() && getContext() != null) {
-                    // Reset UI state first
                     hdChip.setEnabled(true);
                     updateHDChipState();
-                    
-                    // Unlock feature silently when ad fails
-                    unlockHDFeature(); // Enable HD feature even when ad fails
+                    Toast.makeText(getContext(), "Ad failed to load. Please try again later.", Toast.LENGTH_SHORT).show();
                 }
             });
         } else {
-            // Ad service not available - unlock feature silently
-            unlockHDFeature(); // Enable HD feature even when ad service is not available
+            // Ad service not available - do NOT unlock; notify user
+            if (isAdded() && getContext() != null) {
+                hdChip.setEnabled(true);
+                updateHDChipState();
+                Toast.makeText(getContext(), "Ad service unavailable. Please try again later.", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 

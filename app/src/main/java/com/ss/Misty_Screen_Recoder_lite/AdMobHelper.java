@@ -17,14 +17,14 @@ public class AdMobHelper {
     private static final String TAG = "AdMobHelper";
     
     // Ad unit ID (use test ID for development, real ID for production)
-    // private static final String REWARDED_AD_UNIT_ID = "ca-app-pub-3940256099942544/5224354917"; // Test rewarded ad unit ID for development
-   private static final String REWARDED_AD_UNIT_ID = "ca-app-pub-3318833775820712/2507463355"; // Real ad unit ID for production (replace with your actual rewarded ad unit ID)
+    private static final String REWARDED_AD_UNIT_ID = "ca-app-pub-3940256099942544/5224354917"; // Test rewarded ad unit ID for development
+    // private static final String REWARDED_AD_UNIT_ID = "ca-app-pub-3318833775820712/2507463355"; // Real ad unit ID for production
     
     private RewardedAd rewardedAd;
     private boolean isLoadingRewarded = false;
     private boolean isSdkInitialized = false;
     private int retryCount = 0;
-    private static final int MAX_RETRY_COUNT = 3;
+    private static final int MAX_RETRY_COUNT = 1;
     
     // Callback for rewarded ad loading
     private CustomRewardedAdLoadCallback rewardedLoadCallback;
@@ -38,12 +38,9 @@ public class AdMobHelper {
      */
     private void initializeSdk(Context context) {
         if (!isSdkInitialized) {
-            MobileAds.initialize(context, initializationStatus -> {
-                isSdkInitialized = true;
-                LogUtils.d(TAG, "AdMob SDK initialized");
-                // Auto-load first ad after SDK initialization
-                loadRewardedAd(context, null);
-            });
+            // SDK already initialized in MyApplication, just mark as ready
+            isSdkInitialized = true;
+            LogUtils.d(TAG, "AdMob SDK already initialized in Application");
         }
     }
     
@@ -86,16 +83,14 @@ public class AdMobHelper {
                             public void onAdDismissedFullScreenContent() {
                                 rewardedAd = null;
                                 LogUtils.d(TAG, "Rewarded ad dismissed");
-                                // Load next ad automatically after a short delay
-                                loadRewardedAd(context, null);
+                                // Don't auto-load next ad to prevent invalid traffic
                             }
                             
                             @Override
                             public void onAdFailedToShowFullScreenContent(AdError adError) {
                                 rewardedAd = null;
                                 LogUtils.e(TAG, "Rewarded ad failed to show: " + adError.getMessage());
-                                // Retry loading after failure
-                                loadRewardedAd(context, null);
+                                // Don't auto-retry to prevent invalid traffic
                             }
                             
                             @Override
@@ -116,14 +111,14 @@ public class AdMobHelper {
                         isLoadingRewarded = false;
                         LogUtils.e(TAG, "Rewarded ad failed to load: " + loadAdError.getMessage());
                         
-                        // Retry logic for failed loads
-                        if (retryCount < MAX_RETRY_COUNT) {
+                        // Reduced retry logic to prevent invalid traffic
+                        if (retryCount < 1) { // Only retry once instead of 3 times
                             retryCount++;
-                            LogUtils.d(TAG, "Retrying ad load, attempt " + retryCount + "/" + MAX_RETRY_COUNT);
-                            // Retry after a short delay
+                            LogUtils.d(TAG, "Retrying ad load, attempt " + retryCount + "/1");
+                            // Retry after a longer delay
                             new android.os.Handler().postDelayed(() -> {
                                 loadRewardedAd(context, rewardedLoadCallback);
-                            }, 2000); // 2 second delay
+                            }, 5000); // 5 second delay instead of 2
                         } else {
                             retryCount = 0; // Reset for next time
                             if (rewardedLoadCallback != null) {

@@ -46,35 +46,53 @@ public class ConsentManager {
         }
 
         requesting = true;
-        ConsentRequestParameters params = new ConsentRequestParameters.Builder().build();
+        
+        // Add privacy policy URL to consent parameters
+        ConsentRequestParameters params = new ConsentRequestParameters.Builder()
+                .setTagForUnderAgeOfConsent(false)
+                .build();
+                
         consentInformation.requestConsentInfoUpdate(
                 activity,
                 params,
-                () -> UserMessagingPlatform.loadAndShowConsentFormIfRequired(activity, loadAndShowError -> {
-                    // After form flow, store readiness
-                    storeConsentState(activity.getApplicationContext());
-                    requesting = false;
-                    if (onFinished != null) onFinished.run();
-                }),
+                () -> {
+                    // Check if consent form is required
+                    if (consentInformation.getConsentStatus() == ConsentInformation.ConsentStatus.REQUIRED) {
+                        UserMessagingPlatform.loadAndShowConsentFormIfRequired(activity, loadAndShowError -> {
+                            // After form flow, store readiness
+                            storeConsentState(activity.getApplicationContext());
+                            requesting = false;
+                            if (onFinished != null) onFinished.run();
+                        });
+                    } else {
+                        // Consent not required or already obtained
+                        storeConsentState(activity.getApplicationContext());
+                        requesting = false;
+                        if (onFinished != null) onFinished.run();
+                    }
+                },
                 formError -> {
-                    // On error still proceed; ads can be limited
-                    storeConsentState(activity.getApplicationContext());
+                    // On error, don't proceed with ads - this is safer
+                    LogUtils.e("ConsentManager", "Consent request failed: " + formError.getMessage());
                     requesting = false;
-                    if (onFinished != null) onFinished.run();
+                    // Don't call onFinished on error - this prevents ads from loading
                 }
         );
     }
 
     private void storeConsentState(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context.getApplicationContext());
+        
+        // More robust consent state handling
         boolean consentObtained = consentInformation.getConsentStatus() == ConsentInformation.ConsentStatus.OBTAINED
-                || consentInformation.getConsentStatus() == ConsentInformation.ConsentStatus.NOT_REQUIRED
-                || consentInformation.canRequestAds();
-        // If consented to personalized ads, clear NPA; otherwise set NPA=1
+                || consentInformation.getConsentStatus() == ConsentInformation.ConsentStatus.NOT_REQUIRED;
+        
+        // Set NPA flag based on consent status
         boolean useNpa = consentInformation.getConsentStatus() == ConsentInformation.ConsentStatus.REQUIRED
-                && !consentInformation.canRequestAds();
+                || !consentInformation.canRequestAds();
+        
         prefs.edit()
-                .putBoolean(KEY_CONSENT_READY, consentObtained || consentInformation.canRequestAds())
+                .putBoolean(KEY_CONSENT_READY, consentObtained)
                 .putBoolean(KEY_NPA, useNpa)
                 .apply();
     }
