@@ -75,7 +75,8 @@ public class ConsentManager {
                     // On error, don't proceed with ads - this is safer
                     LogUtils.e("ConsentManager", "Consent request failed: " + formError.getMessage());
                     requesting = false;
-                    // Don't call onFinished on error - this prevents ads from loading
+                    // Ensure we still call onFinished so the app can proceed (e.g. without ads)
+                    if (onFinished != null) onFinished.run();
                 }
         );
     }

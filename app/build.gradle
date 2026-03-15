@@ -19,11 +19,21 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            
+            // Real AdMob IDs for Production
+            buildConfigField "String", "AD_MANAGER_APP_ID", "\"ca-app-pub-3318833775820712~4748748589\""
+            buildConfigField "String", "REWARDED_AD_UNIT_ID", "\"ca-app-pub-3318833775820712/2507463355\""
+            manifestPlaceholders = [adManagerAppId: "ca-app-pub-3318833775820712~4748748589"]
         }
         
         debug {
             minifyEnabled false
             shrinkResources false
+            
+            // Test AdMob IDs for Development
+            buildConfigField "String", "AD_MANAGER_APP_ID", "\"ca-app-pub-3940256099942544~3347511713\""
+            buildConfigField "String", "REWARDED_AD_UNIT_ID", "\"ca-app-pub-3940256099942544/5224354917\""
+            manifestPlaceholders = [adManagerAppId: "ca-app-pub-3940256099942544~3347511713"]
         }
     }
 

@@ -16,9 +16,8 @@ import com.google.android.gms.ads.rewarded.RewardItem;
 public class AdMobHelper {
     private static final String TAG = "AdMobHelper";
     
-    // Ad unit ID (use test ID for development, real ID for production)
-    private static final String REWARDED_AD_UNIT_ID = "ca-app-pub-3940256099942544/5224354917"; // Test rewarded ad unit ID for development
-    // private static final String REWARDED_AD_UNIT_ID = "ca-app-pub-3318833775820712/2507463355"; // Real ad unit ID for production
+    // Ad unit ID (injected via build.gradle)
+    private static final String REWARDED_AD_UNIT_ID = BuildConfig.REWARDED_AD_UNIT_ID;
     
     private RewardedAd rewardedAd;
     private boolean isLoadingRewarded = false;
