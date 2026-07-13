@@ -342,21 +342,9 @@ public class ScreenRecordService extends Service {
                 try {
                     mMediaRecorder.start();
 
-                    // Start system-audio capture alongside the video recording.
-                    // AudioPlaybackCapture itself requires the RECORD_AUDIO permission.
-                    if (internalAudioMode && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
-                            && checkSelfPermission(android.Manifest.permission.RECORD_AUDIO)
-                                    == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                        try {
-                            internalAudioCapture = new InternalAudioCapture(mMediaProjection,
-                                    internalAudioWithMic, audioSamplingRate, audioBitrate, internalTempAudio);
-                            internalAudioCapture.start();
-                        } catch (Exception audioError) {
-                            Log.e(TAG, "System audio capture failed to start, continuing without audio: " + audioError.getMessage());
-                            internalAudioCapture = null;
-                        }
-                    } else if (internalAudioMode) {
-                        Log.e(TAG, "System audio capture unavailable (permission or API level); recording video only");
+                    // Start system-audio capture alongside the video recording
+                    if (internalAudioMode && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        startInternalAudioCapture();
                     }
 
                     ResultReceiver receiver = intent.getParcelableExtra(ScreenRecordService.BUNDLED_LISTENER);
@@ -701,6 +689,28 @@ public class ScreenRecordService extends Service {
         }
 
         callOnComplete();
+    }
+
+    /**
+     * Starts AudioPlaybackCapture. The RECORD_AUDIO permission is verified at
+     * runtime below; the lint suppression only quiets its static flow analysis.
+     */
+    @android.annotation.SuppressLint("MissingPermission")
+    @RequiresApi(api = Build.VERSION_CODES.Q)
+    private void startInternalAudioCapture() {
+        if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO)
+                != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            Log.e(TAG, "RECORD_AUDIO permission not granted; recording video only");
+            return;
+        }
+        try {
+            internalAudioCapture = new InternalAudioCapture(mMediaProjection,
+                    internalAudioWithMic, audioSamplingRate, audioBitrate, internalTempAudio);
+            internalAudioCapture.start();
+        } catch (Exception audioError) {
+            Log.e(TAG, "System audio capture failed to start, continuing without audio: " + audioError.getMessage());
+            internalAudioCapture = null;
+        }
     }
 
     /**

@@ -1188,11 +1188,8 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         filter.addAction(FloatingDockService.ACTION_DOCK_STOP);
         filter.addAction(FloatingDockService.ACTION_DOCK_PAUSE);
         filter.addAction(FloatingDockService.ACTION_DOCK_RESUME);
-        if (Build.VERSION.SDK_INT >= 33) {
-            registerReceiver(dockCommandReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
-        } else {
-            registerReceiver(dockCommandReceiver, filter);
-        }
+        androidx.core.content.ContextCompat.registerReceiver(this, dockCommandReceiver, filter,
+                androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED);
     }
 
     // Thread-safe recording button handler to prevent race conditions
