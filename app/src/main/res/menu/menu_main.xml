@@ -4,6 +4,12 @@
     tools:context="info.androidhive.settings.MainActivity">
 
     <item
+        android:id="@+id/action_recordings"
+        android:orderInCategory="90"
+        android:title="@string/my_recordings"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_settings"
         android:orderInCategory="100"
         android:title="@string/action_settings"

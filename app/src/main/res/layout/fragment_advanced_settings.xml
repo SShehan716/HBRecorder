@@ -14,21 +14,19 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            app:cardCornerRadius="8dp"
-            app:cardElevation="4dp">
+            android:layout_marginBottom="12dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="20dp">
 
                 <TextView
+                    style="@style/SectionLabelStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Video Settings"
-                    android:textAppearance="?attr/textAppearanceHeadline6"
+                    android:text="Video"
                     android:layout_marginBottom="16dp"/>
 
                 <com.google.android.material.textfield.TextInputLayout
@@ -111,21 +109,19 @@
 
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:cardCornerRadius="8dp"
-            app:cardElevation="4dp">
+            android:layout_height="wrap_content">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="20dp">
 
                 <TextView
+                    style="@style/SectionLabelStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Audio Settings"
-                    android:textAppearance="?attr/textAppearanceHeadline6"
+                    android:text="Audio"
                     android:layout_marginBottom="16dp"/>
 
                 <com.google.android.material.textfield.TextInputLayout

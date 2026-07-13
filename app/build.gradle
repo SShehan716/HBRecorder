@@ -19,21 +19,11 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            
-            // Real AdMob IDs for Production
-            buildConfigField "String", "AD_MANAGER_APP_ID", "\"ca-app-pub-3318833775820712~4748748589\""
-            buildConfigField "String", "REWARDED_AD_UNIT_ID", "\"ca-app-pub-3318833775820712/2507463355\""
-            manifestPlaceholders = [adManagerAppId: "ca-app-pub-3318833775820712~4748748589"]
         }
-        
+
         debug {
             minifyEnabled false
             shrinkResources false
-            
-            // Test AdMob IDs for Development
-            buildConfigField "String", "AD_MANAGER_APP_ID", "\"ca-app-pub-3940256099942544~3347511713\""
-            buildConfigField "String", "REWARDED_AD_UNIT_ID", "\"ca-app-pub-3940256099942544/5224354917\""
-            manifestPlaceholders = [adManagerAppId: "ca-app-pub-3940256099942544~3347511713"]
         }
     }
 
@@ -59,11 +49,11 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
     implementation 'androidx.preference:preference:1.2.1'
     implementation 'com.google.android.material:material:1.12.0'
-    
-    // AdMob dependency (updated to latest version as per official AdMob guide)
-    implementation 'com.google.android.gms:play-services-ads:24.5.0'
-    // Google UMP SDK for consent
-    implementation 'com.google.android.ump:user-messaging-platform:3.0.0'
+    implementation 'androidx.recyclerview:recyclerview:1.3.2'
+
+    // Media3 ExoPlayer for the built-in video player
+    implementation 'androidx.media3:media3-exoplayer:1.4.1'
+    implementation 'androidx.media3:media3-ui:1.4.1'
 
     // Test dependencies (only for debug)
     debugImplementation 'junit:junit:4.13.2'

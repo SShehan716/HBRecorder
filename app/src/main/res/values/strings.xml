@@ -33,4 +33,64 @@
     <string name="settings_not_supported_message">Some settings are not supported by your device</string>
     <string name="max_file_size_reached_message">The file reached the designated max size</string>
     <string name="general_recording_error_message">Unknown Error</string>
+
+    <!-- Recordings library -->
+    <string name="my_recordings">My Recordings</string>
+    <string name="no_recordings">No recordings yet.\nHit START and your videos will show up here.</string>
+    <string name="media_permission_needed">Media permission is needed to show your recordings</string>
+    <string name="video_thumbnail">Video thumbnail</string>
+    <string name="more_options">More options</string>
+    <string name="action_play">Play</string>
+    <string name="action_trim">Trim / Edit</string>
+    <string name="action_share">Share</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_restore">Restore to gallery</string>
+    <string name="action_hide_vault">Hide in Private Vault</string>
+    <string name="delete_confirm">Delete \"%1$s\" permanently?</string>
+    <string name="deleted">Deleted</string>
+    <string name="delete_failed">Could not delete this video</string>
+
+    <!-- Private vault -->
+    <string name="private_vault">Private Vault</string>
+    <string name="vault_empty">Your vault is empty.\nHide videos from the recordings list to protect them.</string>
+    <string name="hide_only">Hide only (invisible to gallery)</string>
+    <string name="hide_and_encrypt">Hide + Encrypt (AES-256)</string>
+    <string name="vault_hiding">Moving to vault…</string>
+    <string name="vault_hidden">Video hidden in your Private Vault</string>
+    <string name="vault_hidden_encrypted">Video encrypted and hidden in your Private Vault</string>
+    <string name="vault_hide_failed">Could not hide video: %1$s</string>
+    <string name="vault_restoring">Restoring to gallery…</string>
+    <string name="vault_restored">Video restored to your gallery</string>
+    <string name="vault_restore_failed">Could not restore video: %1$s</string>
+    <string name="vault_decrypting">Decrypting…</string>
+    <string name="vault_play_failed">Could not play video: %1$s</string>
+    <string name="vault_set_pin_first">Set up your vault PIN first</string>
+    <string name="vault_create_pin">Create vault PIN</string>
+    <string name="vault_create_pin_message">Choose a PIN (at least 4 digits) to protect your hidden videos.</string>
+    <string name="vault_confirm_pin">Confirm PIN</string>
+    <string name="vault_enter_pin">Enter vault PIN</string>
+    <string name="pin_hint">PIN</string>
+    <string name="pin_too_short">PIN must be at least 4 digits</string>
+    <string name="pin_mismatch">PINs did not match, try again</string>
+    <string name="pin_created">PIN saved</string>
+    <string name="pin_wrong">Wrong PIN</string>
+    <string name="change_pin">Change PIN</string>
+    <string name="encrypted">Encrypted</string>
+
+    <!-- Floating dock -->
+    <string name="dock_expand">Show recording controls</string>
+    <string name="dock_collapse">Hide recording controls</string>
+    <string name="dock_pause">Pause recording</string>
+    <string name="dock_resume">Resume recording</string>
+    <string name="dock_stop">Stop recording</string>
+
+    <!-- Trim editor -->
+    <string name="trim_video">Trim Video</string>
+    <string name="trim_save">Save trimmed copy</string>
+    <string name="trim_range_format">%1$s – %2$s  (length %3$s)</string>
+    <string name="trim_keyframe_note">Lossless trim — start snaps to the nearest keyframe</string>
+    <string name="trim_too_short">Select at least 1 second</string>
+    <string name="trim_saved">Saved as %1$s</string>
+    <string name="trim_failed">Trim failed: %1$s</string>
+    <string name="trim_load_failed">Could not read this video</string>
 </resources>

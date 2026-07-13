@@ -19,6 +19,7 @@ import android.provider.MediaStore;
 import android.provider.Settings;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.view.WindowManager;
@@ -142,10 +143,10 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
     private QuickSettingsFragment quickSettingsFragment;
     private AdvancedSettingsFragment advancedSettingsFragment;
 
-    // AdMob components
-    private AdMobHelper adMobHelper;
-
     private boolean hasRetriedWithDefaults = false;
+
+    // Receives pause/resume/stop commands from the floating dock overlay
+    private android.content.BroadcastReceiver dockCommandReceiver;
 
     // Add dialog reference to dismiss it later
     private androidx.appcompat.app.AlertDialog overlayPermissionDialog;
@@ -165,17 +166,12 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         
         setContentView(R.layout.activity_main);
 
-        // UMP: request consent (BLOCKING) before any ad usage
-        ConsentManager.getInstance(this).requestConsentIfNeeded(this, () -> {
-            // Only initialize ads AFTER consent is obtained
-            initializeAds();
-        });
-
         requestAllPermissions();
         requestNotificationPermission();
         initViews();
         setupDropdowns();
         setOnClickListeners();
+        registerDockCommandReceiver();
 
         // Init HBRecorder (no need for LOLLIPOP check, minSdk is 21)
             hbRecorder = new HBRecorder(this, this);
@@ -384,12 +380,40 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         outputFormatDropdown.setAdapter(formatAdapter);
         outputFormatDropdown.setText(defaultFormats[0], false);
         
-        String[] audioSources = {"Microphone", "Voice Call", "Default"};
+        String[] audioSources = getAudioSourceOptions();
         ArrayAdapter<String> audioSourceAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, audioSources);
         audioSourceDropdown.setAdapter(audioSourceAdapter);
         audioSourceDropdown.setText(audioSources[0], false);
-        
+
         loadSettings();
+    }
+
+    /**
+     * System audio capture (AudioPlaybackCapture) needs Android 10+.
+     */
+    public static String[] getAudioSourceOptions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            return new String[]{"Microphone", "System audio", "System + Mic"};
+        }
+        return new String[]{"Microphone"};
+    }
+
+    /** Maps the user-facing audio source name to the HBRecorder source constant. */
+    public static String mapAudioSourceName(String displayName) {
+        if (displayName == null) return "MIC";
+        switch (displayName) {
+            case "System audio":
+                return "SYSTEM";
+            case "System + Mic":
+                return "SYSTEM_AND_MIC";
+            case "Voice Call": // legacy saved value
+                return "VOICE_CALL";
+            case "Default": // legacy saved value
+                return "DEFAULT";
+            case "Microphone":
+            default:
+                return "MIC";
+        }
     }
     
     private void setupDropdownsWithCodecInfo(HBRecorderCodecInfo codecInfo, ArrayList<String> supportedFormats) {
@@ -438,8 +462,8 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         bitrateDropdown.setAdapter(bitrateAdapter);
         bitrateDropdown.setText(supportedBitrates.get(0), false);
 
-        // 6. Audio source options - corrected for proper functionality
-        String[] audioSources = {"Microphone", "Voice Call", "Default"};
+        // 6. Audio source options - mic / system audio / both
+        String[] audioSources = getAudioSourceOptions();
         ArrayAdapter<String> audioSourceAdapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, audioSources);
         audioSourceDropdown.setAdapter(audioSourceAdapter);
         audioSourceDropdown.setText(audioSources[0], false);
@@ -844,6 +868,12 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
             handleRecordingButtonClick();
         });
 
+        View recordingsButton = findViewById(R.id.button_recordings);
+        if (recordingsButton != null) {
+            recordingsButton.setOnClickListener(v ->
+                    startActivity(new Intent(MainActivity.this, RecordingsActivity.class)));
+        }
+
         advancedAudioSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             isAudioEnabled = isChecked;
             saveAudioPreference(isChecked);
@@ -1120,6 +1150,51 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         });
     }
     
+    /**
+     * Listen for pause/resume/stop commands sent by the floating dock overlay.
+     */
+    private void registerDockCommandReceiver() {
+        dockCommandReceiver = new android.content.BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String action = intent.getAction();
+                if (action == null || hbRecorder == null) return;
+                try {
+                    switch (action) {
+                        case FloatingDockService.ACTION_DOCK_STOP:
+                            if (hbRecorder.isBusyRecording() && !isStopPending) {
+                                handleRecordingButtonClick();
+                            }
+                            break;
+                        case FloatingDockService.ACTION_DOCK_PAUSE:
+                            if (hbRecorder.isBusyRecording() && !hbRecorder.isRecordingPaused()) {
+                                hbRecorder.pauseScreenRecording();
+                                LogUtils.d("MainActivity", "Recording paused from dock");
+                            }
+                            break;
+                        case FloatingDockService.ACTION_DOCK_RESUME:
+                            if (hbRecorder.isBusyRecording() && hbRecorder.isRecordingPaused()) {
+                                hbRecorder.resumeScreenRecording();
+                                LogUtils.d("MainActivity", "Recording resumed from dock");
+                            }
+                            break;
+                    }
+                } catch (Exception e) {
+                    LogUtils.e("MainActivity", "Error handling dock command " + action + ": " + e.getMessage());
+                }
+            }
+        };
+        android.content.IntentFilter filter = new android.content.IntentFilter();
+        filter.addAction(FloatingDockService.ACTION_DOCK_STOP);
+        filter.addAction(FloatingDockService.ACTION_DOCK_PAUSE);
+        filter.addAction(FloatingDockService.ACTION_DOCK_RESUME);
+        if (Build.VERSION.SDK_INT >= 33) {
+            registerReceiver(dockCommandReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(dockCommandReceiver, filter);
+        }
+    }
+
     // Thread-safe recording button handler to prevent race conditions
     private synchronized void handleRecordingButtonClick() {
         if (hbRecorder == null) {
@@ -1251,7 +1326,7 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
     // Example of how to set custom settings
     private void customSettings() {
         hbRecorder.setVideoEncoder("H264");
-        hbRecorder.setAudioSource("DEFAULT");
+        hbRecorder.setAudioSource(mapAudioSourceName(getSelectedAudioSourceName()));
         hbRecorder.setOutputFormat("MPEG_4");
         
         // Get selected resolution
@@ -1312,11 +1387,30 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         hbRecorder.isAudioEnabled(isAudioEnabled);
     }
 
+    /**
+     * The audio source the user picked — the Advanced tab dropdown wins, falling
+     * back to the saved preference so Quick-tab recordings honor it too.
+     */
+    private String getSelectedAudioSourceName() {
+        // The Advanced Settings fragment (the visible UI) saves its choice here
+        String fromFragment = PreferenceManager.getDefaultSharedPreferences(this)
+                .getString("saved_audio_source", null);
+        if (fromFragment != null && !fromFragment.isEmpty()) {
+            return fromFragment;
+        }
+        if (audioSourceDropdown != null && audioSourceDropdown.getText() != null
+                && !audioSourceDropdown.getText().toString().isEmpty()) {
+            return audioSourceDropdown.getText().toString();
+        }
+        SharedPreferences prefs = getSharedPreferences(PREF_NAME, MODE_PRIVATE);
+        return prefs.getString(KEY_AUDIO_SOURCE, "Microphone");
+    }
+
     //Get/Set the selected settings
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void quickSettings() {
         hbRecorder.setVideoEncoder("H264");
-        hbRecorder.setAudioSource("DEFAULT");
+        hbRecorder.setAudioSource(mapAudioSourceName(getSelectedAudioSourceName()));
         hbRecorder.setOutputFormat("MPEG_4");
         hbRecorder.setVideoFrameRate(30);
         hbRecorder.setVideoBitrate(5120000);
@@ -1354,6 +1448,11 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         if (id == R.id.action_settings) {
             // launch settings activity
             startActivity(new Intent(MainActivity.this, SettingsActivity.class));
+            return true;
+        }
+
+        if (id == R.id.action_recordings) {
+            startActivity(new Intent(MainActivity.this, RecordingsActivity.class));
             return true;
         }
 
@@ -1698,15 +1797,8 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         String savedAudioSource = prefs.getString(KEY_AUDIO_SOURCE, "System + Mic");
         boolean savedAudioEnabled = prefs.getBoolean(KEY_AUDIO_ENABLED, true);
         
-        advancedSettingsFragment.loadSettings(savedEncoder, savedResolution, savedFramerate, 
+        advancedSettingsFragment.loadSettings(savedEncoder, savedResolution, savedFramerate,
                                             savedBitrate, savedFormat, savedAudioSource, savedAudioEnabled);
-
-        // AdMob initialization moved to consent callback
-        // Pass AdMob helper to fragments for unlock features (will be set after consent)
-        if (adMobHelper != null) {
-            quickSettingsFragment.setAdMobHelper(adMobHelper);
-            advancedSettingsFragment.setAdMobHelper(adMobHelper);
-        }
     }
 
     private void startRecording() {
@@ -1727,28 +1819,6 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         Intent permissionIntent = mediaProjectionManager.createScreenCaptureIntent();
         startActivityForResult(permissionIntent, SCREEN_RECORD_REQUEST_CODE);
     }
-    
-    /**
-     * Initialize AdMob ads for HD unlock feature (only after consent)
-     */
-    private void initializeAds() {
-        adMobHelper = new AdMobHelper();
-        
-        // Pass AdMob helper to fragments for unlock features
-        if (quickSettingsFragment != null) {
-            quickSettingsFragment.setAdMobHelper(adMobHelper);
-        }
-        if (advancedSettingsFragment != null) {
-            advancedSettingsFragment.setAdMobHelper(adMobHelper);
-        }
-        
-        // Don't preload ads - load only when needed to prevent invalid traffic
-        LogUtils.d("MainActivity", "AdMob initialized after consent");
-    }
-    
-
-    
-
     
     /**
      * Check system permission status and start floating dock accordingly
@@ -1889,16 +1959,18 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
     }
     
     @Override
-    protected void onPause() {
-        super.onPause();
-        // Optional: Clean up ad resources when app goes to background
-        // This is handled automatically by the AdMob SDK
-    }
-    
-    @Override
     protected void onDestroy() {
         super.onDestroy();
-        
+
+        if (dockCommandReceiver != null) {
+            try {
+                unregisterReceiver(dockCommandReceiver);
+            } catch (Exception e) {
+                LogUtils.e("MainActivity", "Error unregistering dock receiver: " + e.getMessage());
+            }
+            dockCommandReceiver = null;
+        }
+
         // Clean up HBRecorder resources
         if (hbRecorder != null) {
             try {
@@ -1910,14 +1982,6 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
             }
             hbRecorder = null;
         }
-        
-        // Clean up AdMob resources
-        if (adMobHelper != null) {
-            adMobHelper.cleanup();
-            adMobHelper = null;
-        }
-        
-
         
         // Clean up fragments to prevent memory leaks
         quickSettingsFragment = null;
@@ -1961,42 +2025,19 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
         }
         
         try {
-            switch (audioSourceName) {
-                case "Microphone":
-                    hbRecorder.setAudioSource("MIC");
-                    if (BuildConfig.DEBUG) {
-                        LogUtils.d("MainActivity", "Audio source set to MIC");
-                    }
-                    break;
-                    
-
-                    
-                case "Voice Call":
-                    hbRecorder.setAudioSource("VOICE_CALL");
-                    if (BuildConfig.DEBUG) {
-                        LogUtils.d("MainActivity", "Audio source set to VOICE_CALL");
-                    }
-                    break;
-                    
-                case "Default":
-                    hbRecorder.setAudioSource("DEFAULT");
-                    if (BuildConfig.DEBUG) {
-                        LogUtils.d("MainActivity", "Audio source set to DEFAULT");
-                    }
-                    break;
-                    
-                default:
-                    LogUtils.w("MainActivity", "Unknown audio source: " + audioSourceName + ", defaulting to MIC");
-                    hbRecorder.setAudioSource("MIC");
-                    break;
+            String source = mapAudioSourceName(audioSourceName);
+            hbRecorder.setAudioSource(source);
+            if (BuildConfig.DEBUG) {
+                LogUtils.d("MainActivity", "Audio source set to " + source + " (" + audioSourceName + ")");
             }
-            
-            // Validate audio permissions
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+
+            // Mic permission is only needed when the microphone is part of the mix
+            boolean needsMic = !"SYSTEM".equals(source);
+            if (needsMic && ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                 LogUtils.w("MainActivity", "RECORD_AUDIO permission not granted");
                 showLongToast("Microphone permission required for audio recording");
             }
-            
+
         } catch (Exception e) {
             LogUtils.e("MainActivity", "Error configuring audio source: " + e.getMessage());
             // Fallback to safe option
@@ -2052,7 +2093,6 @@ public class MainActivity extends AppCompatActivity implements HBRecorderListene
      * Public method to handle audio unlock from any fragment
      */
     public void onAudioUnlocked() {
-        // Audio feature was unlocked via rewarded ad
         // Update advanced settings audio switch
         if (advancedAudioSwitch != null) {
             advancedAudioSwitch.setEnabled(true);

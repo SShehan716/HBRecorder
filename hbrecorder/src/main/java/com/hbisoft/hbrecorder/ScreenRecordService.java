@@ -94,6 +94,13 @@ public class ScreenRecordService extends Service {
     private Uri returnedUri = null;
     private Intent mIntent;
 
+    // Internal (system) audio capture — Android 10+
+    private boolean internalAudioMode = false;
+    private boolean internalAudioWithMic = false;
+    private InternalAudioCapture internalAudioCapture;
+    private java.io.File internalTempVideo;
+    private java.io.File internalTempAudio;
+
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     @Override
     public int onStartCommand(final Intent intent, int flags, int startId) {
@@ -160,8 +167,17 @@ public class ScreenRecordService extends Service {
                 videoFrameRate = intent.getIntExtra("videoFrameRate", 30);
                 videoBitrate = intent.getIntExtra("videoBitrate", 40000000);
 
-                if (audioSource != null) {
-                    if (isAudioEnabled) {
+                internalAudioMode = false;
+                internalAudioWithMic = false;
+                if (audioSource != null && isAudioEnabled) {
+                    boolean wantsSystemAudio = "SYSTEM".equals(audioSource) || "SYSTEM_AND_MIC".equals(audioSource);
+                    if (wantsSystemAudio && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        internalAudioMode = true;
+                        internalAudioWithMic = "SYSTEM_AND_MIC".equals(audioSource);
+                    } else if (wantsSystemAudio) {
+                        // Playback capture needs Android 10; fall back to the microphone
+                        setAudioSourceAsInt("MIC");
+                    } else {
                         setAudioSourceAsInt(audioSource);
                     }
                 }
@@ -330,6 +346,19 @@ public class ScreenRecordService extends Service {
                 //Start Recording
                 try {
                     mMediaRecorder.start();
+
+                    // Start system-audio capture alongside the video recording
+                    if (internalAudioMode && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        try {
+                            internalAudioCapture = new InternalAudioCapture(mMediaProjection,
+                                    internalAudioWithMic, audioSamplingRate, audioBitrate, internalTempAudio);
+                            internalAudioCapture.start();
+                        } catch (Exception audioError) {
+                            Log.e(TAG, "System audio capture failed to start, continuing without audio: " + audioError.getMessage());
+                            internalAudioCapture = null;
+                        }
+                    }
+
                     ResultReceiver receiver = intent.getParcelableExtra(ScreenRecordService.BUNDLED_LISTENER);
                     Bundle bundle = new Bundle();
                     bundle.putInt(ON_START_KEY, ON_START);
@@ -358,6 +387,9 @@ public class ScreenRecordService extends Service {
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void pauseRecording(){
         mMediaRecorder.pause();
+        if (internalAudioCapture != null) {
+            internalAudioCapture.pause();
+        }
         ResultReceiver receiver = mIntent.getParcelableExtra(ScreenRecordService.BUNDLED_LISTENER);
         Bundle bundle = new Bundle();
         bundle.putString(ON_PAUSE_KEY, ON_PAUSE);
@@ -370,6 +402,9 @@ public class ScreenRecordService extends Service {
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void resumeRecording(){
         mMediaRecorder.resume();
+        if (internalAudioCapture != null) {
+            internalAudioCapture.resume();
+        }
         ResultReceiver receiver = mIntent.getParcelableExtra(ScreenRecordService.BUNDLED_LISTENER);
         Bundle bundle = new Bundle();
         bundle.putString(ON_RESUME_KEY, ON_RESUME);
@@ -546,8 +581,9 @@ public class ScreenRecordService extends Service {
 
         mMediaRecorder = new MediaRecorder();
 
-
-        if (isAudioEnabled) {
+        // In internal-audio mode the MediaRecorder handles video only; audio is
+        // captured separately via AudioPlaybackCapture and muxed in afterwards.
+        if (isAudioEnabled && !internalAudioMode) {
             mMediaRecorder.setAudioSource(audioSourceAsInt);
         }
         mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
@@ -557,7 +593,7 @@ public class ScreenRecordService extends Service {
             mMediaRecorder.setOrientationHint(orientationHint);
         }
 
-        if (isAudioEnabled) {
+        if (isAudioEnabled && !internalAudioMode) {
             mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
             mMediaRecorder.setAudioEncodingBitRate(audioBitrate);
             mMediaRecorder.setAudioSamplingRate(audioSamplingRate);
@@ -565,8 +601,20 @@ public class ScreenRecordService extends Service {
 
         mMediaRecorder.setVideoEncoder(videoEncoderAsInt);
 
-
-        if (returnedUri != null) {
+        if (internalAudioMode) {
+            // Video goes to a temp file; the final destination is written during muxing.
+            if (outputFormat != null && returnedUri == null) {
+                filePath = path + "/" + name + getExtension(outputFormat);
+                fileName = name + getExtension(outputFormat);
+            }
+            internalTempVideo = new java.io.File(getCacheDir(), "hbrecorder_video_tmp.mp4");
+            internalTempAudio = new java.io.File(getCacheDir(), "hbrecorder_audio_tmp.m4a");
+            //noinspection ResultOfMethodCallIgnored
+            internalTempVideo.delete();
+            //noinspection ResultOfMethodCallIgnored
+            internalTempAudio.delete();
+            mMediaRecorder.setOutputFile(internalTempVideo.getAbsolutePath());
+        } else if (returnedUri != null) {
             try {
                 ContentResolver contentResolver = getContentResolver();
                 FileDescriptor inputPFD = Objects.requireNonNull(contentResolver.openFileDescriptor(returnedUri, "rw")).getFileDescriptor();
@@ -640,9 +688,87 @@ public class ScreenRecordService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        resetAll();
-        callOnComplete();
 
+        // Finalize the audio file before the projection is torn down
+        if (internalAudioCapture != null) {
+            internalAudioCapture.stop();
+        }
+
+        resetAll();
+
+        if (internalAudioMode) {
+            muxInternalAudio();
+        }
+
+        callOnComplete();
+    }
+
+    /**
+     * Combines the video-only temp recording with the captured system audio
+     * into the final destination (content Uri or file path).
+     */
+    private void muxInternalAudio() {
+        String audioPath = null;
+        if (internalAudioCapture != null && internalAudioCapture.hasAudio()) {
+            audioPath = internalTempAudio.getAbsolutePath();
+        }
+        internalAudioCapture = null;
+
+        if (internalTempVideo == null || !internalTempVideo.exists() || internalTempVideo.length() == 0) {
+            Log.e(TAG, "muxInternalAudio: temp video missing, nothing to write");
+            return;
+        }
+
+        try {
+            if (returnedUri != null) {
+                android.os.ParcelFileDescriptor pfd = getContentResolver().openFileDescriptor(returnedUri, "rw");
+                if (pfd == null) throw new java.io.IOException("Cannot open output Uri");
+                try {
+                    AvMuxer.mux(internalTempVideo.getAbsolutePath(), audioPath, pfd.getFileDescriptor());
+                } finally {
+                    pfd.close();
+                }
+            } else {
+                AvMuxer.mux(internalTempVideo.getAbsolutePath(), audioPath, filePath);
+            }
+            Log.d(TAG, "muxInternalAudio: final file written (audio track: " + (audioPath != null) + ")");
+        } catch (Exception e) {
+            Log.e(TAG, "muxInternalAudio failed, falling back to video-only copy: " + e.getMessage());
+            copyVideoOnlyFallback();
+        } finally {
+            //noinspection ResultOfMethodCallIgnored
+            internalTempVideo.delete();
+            if (internalTempAudio != null) {
+                //noinspection ResultOfMethodCallIgnored
+                internalTempAudio.delete();
+            }
+        }
+    }
+
+    private void copyVideoOnlyFallback() {
+        try {
+            java.io.InputStream in = new java.io.FileInputStream(internalTempVideo);
+            java.io.OutputStream out;
+            if (returnedUri != null) {
+                out = getContentResolver().openOutputStream(returnedUri, "rwt");
+            } else {
+                out = new java.io.FileOutputStream(filePath);
+            }
+            if (out == null) throw new java.io.IOException("Cannot open output");
+            try {
+                byte[] buffer = new byte[64 * 1024];
+                int read;
+                while ((read = in.read(buffer)) > 0) {
+                    out.write(buffer, 0, read);
+                }
+                out.flush();
+            } finally {
+                in.close();
+                out.close();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Video-only fallback copy failed: " + e.getMessage());
+        }
     }
 
     private void callOnComplete() {

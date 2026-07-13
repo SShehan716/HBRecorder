@@ -1,23 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="main_background">#121212</color>
-    <color name="text_primary">#FFFFFF</color>
-    <color name="text_secondary">#CCCCCC</color>
-    <color name="colorPrimary">#4A267C</color> <!-- Darker purple for dark mode -->
-    <color name="colorPrimaryDark">#4A2C6A</color>
-    <color name="colorAccent">#6A4C93</color>
-    <color name="gray">#888888</color>
-    <color name="gray_light">#F5F5F5</color>
-    <color name="white">#FFFFFF</color>
-    <!-- For toggle and tab visibility in dark mode -->
-    <color name="toggle_selected_bg">#4D526F</color>
-    <color name="toggle_unselected_bg">#222222</color>
+    <!-- Dark theme: lighter, desaturated brand tones on tinted dark surfaces -->
+    <color name="colorPrimary">#36013f</color>
+    <color name="colorPrimaryDark">#1C0121</color>
+    <color name="colorAccent">#CE93D8</color>
+    <color name="brand_accent">#CE93D8</color>
+
+    <color name="main_background">#141118</color>
+    <color name="surface">#1F1A24</color>
+    <color name="surface_variant">#2A2331</color>
+    <color name="outline">#3B3243</color>
+    <color name="divider">#3B3243</color>
+    <color name="text_primary">#EDE7F2</color>
+    <color name="text_secondary">#A79DB1</color>
+    <color name="thumb_placeholder">#2A2331</color>
+
+    <color name="toggle_selected_bg">#7B2CBF</color>
+    <color name="toggle_unselected_bg">#2A2331</color>
     <color name="toggle_selected_text">#FFFFFF</color>
-    <color name="toggle_unselected_text">#CCCCCC</color>
-    <color name="tab_indicator">#6A4C93</color>
-    <color name="tab_text_selected">#FFFFFF</color>
-    <color name="tab_text_unselected">#CCCCCC</color>
-    
-    <!-- Chip colors for dark mode -->
-    <color name="chip_inactive_bg">#333333</color>
-    <color name="chip_inactive_text">#CCCCCC</color>
-</resources> 
+    <color name="toggle_unselected_text">#EDE7F2</color>
+    <color name="tab_indicator">#CE93D8</color>
+    <color name="tab_text_selected">#CE93D8</color>
+    <color name="tab_text_unselected">#A79DB1</color>
+
+    <color name="chip_active_bg">#7B2CBF</color>
+    <color name="chip_inactive_bg">#2A2331</color>
+    <color name="chip_inactive_text">#EDE7F2</color>
+
+    <color name="button_primary">#7B2CBF</color>
+    <color name="button_secondary_text">#CE93D8</color>
+</resources>

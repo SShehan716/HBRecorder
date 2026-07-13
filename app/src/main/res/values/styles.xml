@@ -2,26 +2,65 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
-        <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorSecondary">@color/brand_accent</item>
+        <item name="colorControlActivated">@color/brand_accent</item>
         <item name="android:windowBackground">@color/main_background</item>
         <item name="android:textColorPrimary">@color/text_primary</item>
         <item name="android:textColorSecondary">@color/text_secondary</item>
         <item name="android:windowLightStatusBar">?attr/isLightTheme</item>
+        <item name="materialCardViewStyle">@style/AppCard</item>
+    </style>
+
+    <!-- For screens that supply their own Toolbar (recordings, vault, trim, player) -->
+    <style name="AppTheme.NoActionBar" parent="AppTheme">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <!-- Cards: soft radius, hairline outline, flat (no heavy shadows) -->
+    <style name="AppCard" parent="Widget.MaterialComponents.CardView">
+        <item name="cardCornerRadius">16dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="strokeColor">@color/outline</item>
+        <item name="cardBackgroundColor">@color/surface</item>
     </style>
 
     <style name="CheckboxStyle" parent="Theme.MaterialComponents.Light">
         <item name="colorControlNormal">@color/gray</item>
-        <item name="colorControlActivated">@color/colorAccent</item>
+        <item name="colorControlActivated">@color/brand_accent</item>
     </style>
 
+    <!-- Primary CTA: full-width pill -->
     <style name="ButtonStyle" parent="Widget.MaterialComponents.Button">
         <item name="android:textColor">@color/white</item>
         <item name="android:textAllCaps">false</item>
-        <item name="android:padding">16dp</item>
-        <item name="cornerRadius">8dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.03</item>
+        <item name="android:paddingTop">16dp</item>
+        <item name="android:paddingBottom">16dp</item>
+        <item name="cornerRadius">28dp</item>
+        <item name="backgroundTint">@color/button_primary</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+    </style>
+
+    <!-- Secondary action: outlined pill -->
+    <style name="SecondaryButtonStyle" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:textColor">@color/button_secondary_text</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.02</item>
+        <item name="android:paddingTop">13dp</item>
+        <item name="android:paddingBottom">13dp</item>
+        <item name="cornerRadius">28dp</item>
+        <item name="strokeColor">@color/outline</item>
+        <item name="iconTint">@color/button_secondary_text</item>
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
     </style>
@@ -39,6 +78,15 @@
         <item name="android:layout_marginBottom">8dp</item>
     </style>
 
+    <!-- Card section headers: small caps label -->
+    <style name="SectionLabelStyle">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
+
     <style name="TabTextAppearance" parent="TextAppearance.MaterialComponents.Button">
         <item name="android:textSize">14sp</item>
         <item name="android:textStyle">bold</item>
@@ -51,6 +99,10 @@
         <item name="checkedIconVisible">false</item>
         <item name="chipBackgroundColor">@color/chip_background_color</item>
         <item name="android:textColor">@color/chip_text_color</item>
+        <item name="chipCornerRadius">20dp</item>
+        <item name="chipMinHeight">40dp</item>
+        <item name="chipStartPadding">10dp</item>
+        <item name="chipEndPadding">10dp</item>
     </style>
 
 </resources>

@@ -1,5 +1,7 @@
 package com.ss.Misty_Screen_Recoder_lite;
 
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -7,19 +9,27 @@ import android.graphics.PixelFormat;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import androidx.annotation.Nullable;
-import android.widget.ImageView;
-import com.ss.Misty_Screen_Recoder_lite.LogUtils;
 
+import androidx.annotation.Nullable;
+
+/**
+ * Draggable floating dock shown while recording. Offers pause/resume and
+ * stop controls; commands are broadcast to MainActivity, which owns the
+ * HBRecorder instance.
+ */
 public class FloatingDockService extends Service {
+    public static final String ACTION_DOCK_STOP = "com.ss.Misty_Screen_Recoder_lite.DOCK_STOP";
+    public static final String ACTION_DOCK_PAUSE = "com.ss.Misty_Screen_Recoder_lite.DOCK_PAUSE";
+    public static final String ACTION_DOCK_RESUME = "com.ss.Misty_Screen_Recoder_lite.DOCK_RESUME";
+
     private WindowManager windowManager;
     private View floatingView;
     private WindowManager.LayoutParams params;
@@ -30,26 +40,28 @@ public class FloatingDockService extends Service {
     private Handler timerHandler;
     private Runnable timerRunnable;
     private int secondsElapsed;
+    private boolean isPaused = false;
+    private ObjectAnimator recDotAnimator;
 
     @Override
     public void onCreate() {
         super.onCreate();
         LogUtils.d("FloatingDockService", "Service onCreate called");
-        
+
         // Check overlay permission before attempting to add floating view
         if (!checkOverlayPermission()) {
             LogUtils.e("FloatingDockService", "Overlay permission not granted, stopping service");
             stopSelf();
             return;
         }
-        
+
         windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
         if (windowManager == null) {
             LogUtils.e("FloatingDockService", "WindowManager is null, stopping service");
             stopSelf();
             return;
         }
-        
+
         // Add a small delay to ensure service is fully initialized
         new Handler().postDelayed(() -> {
             try {
@@ -82,13 +94,23 @@ public class FloatingDockService extends Service {
         LinearLayout recorderBar = floatingView.findViewById(R.id.recorder_bar);
         TextView timerText = floatingView.findViewById(R.id.timer_text);
         ImageView closeIcon = floatingView.findViewById(R.id.close_icon);
+        ImageView pauseResumeIcon = floatingView.findViewById(R.id.pause_resume_icon);
+        ImageView stopIcon = floatingView.findViewById(R.id.stop_icon);
+        View recDot = floatingView.findViewById(R.id.rec_dot);
 
         final int[] downRawX = {0};
         final int[] downRawY = {0};
         final int CLICK_DRAG_TOLERANCE = 10;
         final int screenWidth = getResources().getDisplayMetrics().widthPixels;
 
-        // Only show timer when expanded (recorderBar visible)
+        // Blinking REC dot
+        recDotAnimator = ObjectAnimator.ofFloat(recDot, "alpha", 1f, 0.15f);
+        recDotAnimator.setDuration(700);
+        recDotAnimator.setRepeatCount(ValueAnimator.INFINITE);
+        recDotAnimator.setRepeatMode(ValueAnimator.REVERSE);
+        recDotAnimator.start();
+
+        // Expand / collapse
         recorderIcon.setOnClickListener(v -> {
             recorderIcon.setVisibility(View.GONE);
             recorderBar.setVisibility(View.VISIBLE);
@@ -96,6 +118,33 @@ public class FloatingDockService extends Service {
         closeIcon.setOnClickListener(v -> {
             recorderBar.setVisibility(View.GONE);
             recorderIcon.setVisibility(View.VISIBLE);
+        });
+
+        // Pause / resume toggle
+        pauseResumeIcon.setOnClickListener(v -> {
+            if (isPaused) {
+                sendCommand(ACTION_DOCK_RESUME);
+                isPaused = false;
+                pauseResumeIcon.setImageResource(R.drawable.ic_pause);
+                pauseResumeIcon.setContentDescription(getString(R.string.dock_pause));
+                if (recDotAnimator != null) recDotAnimator.resume();
+            } else {
+                sendCommand(ACTION_DOCK_PAUSE);
+                isPaused = true;
+                pauseResumeIcon.setImageResource(R.drawable.ic_play_arrow);
+                pauseResumeIcon.setContentDescription(getString(R.string.dock_resume));
+                if (recDotAnimator != null) recDotAnimator.pause();
+                recDot.setAlpha(0.4f);
+            }
+        });
+
+        // Stop recording
+        stopIcon.setOnClickListener(v -> {
+            // Disable controls; MainActivity stops this service when saving completes.
+            pauseResumeIcon.setEnabled(false);
+            stopIcon.setEnabled(false);
+            stopIcon.setAlpha(0.5f);
+            sendCommand(ACTION_DOCK_STOP);
         });
 
         // Drag logic for both icon and bar
@@ -142,18 +191,22 @@ public class FloatingDockService extends Service {
         recorderIcon.setOnTouchListener(dragListener);
         recorderBar.setOnTouchListener(dragListener);
 
-        // Timer logic (always running, only visible when expanded)
+        // Timer (does not advance while paused)
         timerHandler = new Handler();
         secondsElapsed = 0;
         timerRunnable = new Runnable() {
             @Override
             public void run() {
-                int hours = secondsElapsed / 3600;
-                int minutes = (secondsElapsed % 3600) / 60;
-                int seconds = secondsElapsed % 60;
-                String time = String.format("%02d:%02d:%02d", hours, minutes, seconds);
-                timerText.setText(time);
-                secondsElapsed++;
+                if (!isPaused) {
+                    int hours = secondsElapsed / 3600;
+                    int minutes = (secondsElapsed % 3600) / 60;
+                    int seconds = secondsElapsed % 60;
+                    String time = hours > 0
+                            ? String.format("%02d:%02d:%02d", hours, minutes, seconds)
+                            : String.format("%02d:%02d", minutes, seconds);
+                    timerText.setText(time);
+                    secondsElapsed++;
+                }
                 timerHandler.postDelayed(this, 1000);
             }
         };
@@ -175,18 +228,30 @@ public class FloatingDockService extends Service {
         }
     }
 
+    private void sendCommand(String action) {
+        Intent intent = new Intent(action);
+        intent.setPackage(getPackageName());
+        sendBroadcast(intent);
+        LogUtils.d("FloatingDockService", "Dock command sent: " + action);
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
         LogUtils.d("FloatingDockService", "onDestroy called - cleaning up resources");
-        
+
+        if (recDotAnimator != null) {
+            recDotAnimator.cancel();
+            recDotAnimator = null;
+        }
+
         // Clean up timer resources
         if (timerHandler != null && timerRunnable != null) {
             timerHandler.removeCallbacks(timerRunnable);
             timerHandler = null;
             timerRunnable = null;
         }
-        
+
         // Clean up floating view
         if (floatingView != null && windowManager != null) {
             try {
@@ -196,10 +261,10 @@ public class FloatingDockService extends Service {
             }
             floatingView = null;
         }
-        
+
         // Clear references
         windowManager = null;
-        
+
         LogUtils.d("FloatingDockService", "FloatingDockService cleanup completed");
     }
 
@@ -225,4 +290,4 @@ public class FloatingDockService extends Service {
     public IBinder onBind(Intent intent) {
         return null;
     }
-} 
+}

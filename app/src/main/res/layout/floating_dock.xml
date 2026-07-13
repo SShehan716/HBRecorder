@@ -3,54 +3,84 @@
     android:layout_height="wrap_content"
     android:background="@android:color/transparent">
 
-    <!-- Collapsed: Screen recorder icon with circular background -->
+    <!-- Collapsed: record bubble -->
     <ImageView
         android:id="@+id/recorder_icon"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
-        android:src="@drawable/ic_record"
-        android:background="@drawable/circular_icon_background"
-        android:alpha="0.3"
-        android:padding="12dp"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
         android:layout_gravity="center_vertical|start"
-        android:visibility="visible"/>
+        android:background="@drawable/dock_circle_bg"
+        android:contentDescription="@string/dock_expand"
+        android:padding="12dp"
+        android:src="@drawable/ic_record_dock"
+        android:visibility="visible" />
 
-    <!-- Expanded: Purple rounded rectangle bar with close icon and timer -->
+    <!-- Expanded: control pill -->
     <LinearLayout
         android:id="@+id/recorder_bar"
         android:layout_width="wrap_content"
         android:layout_height="56dp"
-        android:orientation="horizontal"
-        android:background="@drawable/rounded_purple_bar"
-        android:gravity="center_vertical"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
         android:layout_gravity="center_vertical|start"
+        android:background="@drawable/dock_pill_bg"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="14dp"
+        android:paddingEnd="8dp"
         android:visibility="gone">
 
-        <!-- Close icon -->
-        <ImageView
-            android:id="@+id/close_icon"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:src="@drawable/ic_close"
-            android:tint="@android:color/white"
-            android:background="@android:color/transparent"
-            android:alpha="0.7"
-            android:padding="4dp"/>
+        <!-- Blinking REC dot -->
+        <View
+            android:id="@+id/rec_dot"
+            android:layout_width="10dp"
+            android:layout_height="10dp"
+            android:background="@drawable/rec_dot" />
 
         <!-- Timer -->
         <TextView
             android:id="@+id/timer_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="10dp"
+            android:fontFamily="monospace"
             android:text="00:00"
-            android:textSize="18sp"
             android:textColor="@android:color/white"
-            android:background="@android:color/transparent"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <!-- Pause / Resume -->
+        <ImageView
+            android:id="@+id/pause_resume_icon"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_marginEnd="6dp"
+            android:background="@drawable/dock_control_bg"
+            android:contentDescription="@string/dock_pause"
             android:padding="8dp"
-            android:textStyle="bold"
-            android:layout_marginStart="8dp"/>
+            android:src="@drawable/ic_pause" />
+
+        <!-- Stop -->
+        <ImageView
+            android:id="@+id/stop_icon"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
+            android:layout_marginEnd="6dp"
+            android:background="@drawable/dock_stop_bg"
+            android:contentDescription="@string/dock_stop"
+            android:padding="9dp"
+            android:src="@drawable/ic_stop" />
+
+        <!-- Collapse -->
+        <ImageView
+            android:id="@+id/close_icon"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:alpha="0.8"
+            android:background="@android:color/transparent"
+            android:contentDescription="@string/dock_collapse"
+            android:padding="6dp"
+            android:src="@drawable/ic_close"
+            android:tint="@android:color/white" />
 
     </LinearLayout>
-</FrameLayout> 
+</FrameLayout>

@@ -14,10 +14,6 @@
 -dontwarn com.hbisoft.hbrecorder.HBRecorderCodecInfo
 -dontwarn com.hbisoft.hbrecorder.HBRecorderListener
 
-# Keep AdMob classes
--keep class com.google.android.gms.ads.** { *; }
--dontwarn com.google.android.gms.ads.**
-
 # Keep Android framework classes
 -keep class androidx.** { *; }
 -keep class android.** { *; }
