@@ -23,6 +23,7 @@ final class AvMuxer {
     private AvMuxer() {
     }
 
+    @androidx.annotation.RequiresApi(api = android.os.Build.VERSION_CODES.O)
     static void mux(String videoPath, String audioPath, FileDescriptor outFd) throws IOException {
         MediaMuxer muxer = new MediaMuxer(outFd, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
         muxAll(videoPath, audioPath, muxer);

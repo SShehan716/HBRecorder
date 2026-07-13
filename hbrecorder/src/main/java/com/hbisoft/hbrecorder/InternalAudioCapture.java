@@ -56,6 +56,7 @@ public class InternalAudioCapture {
         this.outputFile = outputFile;
     }
 
+    @androidx.annotation.RequiresPermission(android.Manifest.permission.RECORD_AUDIO)
     public void start() throws Exception {
         AudioPlaybackCaptureConfiguration captureConfig =
                 new AudioPlaybackCaptureConfiguration.Builder(mediaProjection)
@@ -73,19 +74,28 @@ public class InternalAudioCapture {
         int playbackMinBuf = AudioRecord.getMinBufferSize(sampleRate,
                 AudioFormat.CHANNEL_IN_STEREO, AudioFormat.ENCODING_PCM_16BIT);
 
-        playbackRecord = new AudioRecord.Builder()
-                .setAudioFormat(playbackFormat)
-                .setBufferSizeInBytes(Math.max(playbackMinBuf * 2, 64 * 1024))
-                .setAudioPlaybackCaptureConfig(captureConfig)
-                .build();
+        try {
+            playbackRecord = new AudioRecord.Builder()
+                    .setAudioFormat(playbackFormat)
+                    .setBufferSizeInBytes(Math.max(playbackMinBuf * 2, 64 * 1024))
+                    .setAudioPlaybackCaptureConfig(captureConfig)
+                    .build();
+        } catch (SecurityException e) {
+            throw new IllegalStateException("RECORD_AUDIO permission is required for system audio capture", e);
+        }
 
         if (includeMic) {
             int micMinBuf = AudioRecord.getMinBufferSize(sampleRate,
                     AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
-            micRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate,
-                    AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT,
-                    Math.max(micMinBuf * 2, 32 * 1024));
-            if (micRecord.getState() != AudioRecord.STATE_INITIALIZED) {
+            try {
+                micRecord = new AudioRecord(MediaRecorder.AudioSource.MIC, sampleRate,
+                        AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT,
+                        Math.max(micMinBuf * 2, 32 * 1024));
+            } catch (SecurityException e) {
+                Log.w(TAG, "Mic capture not permitted; recording system audio only");
+                micRecord = null;
+            }
+            if (micRecord != null && micRecord.getState() != AudioRecord.STATE_INITIALIZED) {
                 Log.w(TAG, "Mic AudioRecord failed to initialize; recording system audio only");
                 micRecord.release();
                 micRecord = null;
