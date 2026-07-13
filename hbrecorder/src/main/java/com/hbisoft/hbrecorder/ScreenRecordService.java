@@ -237,12 +237,7 @@ public class ScreenRecordService extends Service {
                         Intent myIntent = new Intent(this, NotificationReceiver.class);
                         PendingIntent pendingIntent;
 
-                        if (Build.VERSION.SDK_INT >= 31) {
-                            pendingIntent = PendingIntent.getBroadcast(this, 0, myIntent, PendingIntent.FLAG_IMMUTABLE);
-                        } else {
-                            pendingIntent = PendingIntent.getBroadcast(this, 0, myIntent, 0);
-
-                        }
+                        pendingIntent = PendingIntent.getBroadcast(this, 0, myIntent, PendingIntent.FLAG_IMMUTABLE);
 
                         Notification.Action action = new Notification.Action.Builder(
                                 Icon.createWithResource(this, android.R.drawable.presence_video_online),
@@ -347,8 +342,11 @@ public class ScreenRecordService extends Service {
                 try {
                     mMediaRecorder.start();
 
-                    // Start system-audio capture alongside the video recording
-                    if (internalAudioMode && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    // Start system-audio capture alongside the video recording.
+                    // AudioPlaybackCapture itself requires the RECORD_AUDIO permission.
+                    if (internalAudioMode && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+                            && checkSelfPermission(android.Manifest.permission.RECORD_AUDIO)
+                                    == android.content.pm.PackageManager.PERMISSION_GRANTED) {
                         try {
                             internalAudioCapture = new InternalAudioCapture(mMediaProjection,
                                     internalAudioWithMic, audioSamplingRate, audioBitrate, internalTempAudio);
@@ -357,6 +355,8 @@ public class ScreenRecordService extends Service {
                             Log.e(TAG, "System audio capture failed to start, continuing without audio: " + audioError.getMessage());
                             internalAudioCapture = null;
                         }
+                    } else if (internalAudioMode) {
+                        Log.e(TAG, "System audio capture unavailable (permission or API level); recording video only");
                     }
 
                     ResultReceiver receiver = intent.getParcelableExtra(ScreenRecordService.BUNDLED_LISTENER);
@@ -387,7 +387,7 @@ public class ScreenRecordService extends Service {
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void pauseRecording(){
         mMediaRecorder.pause();
-        if (internalAudioCapture != null) {
+        if (internalAudioCapture != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             internalAudioCapture.pause();
         }
         ResultReceiver receiver = mIntent.getParcelableExtra(ScreenRecordService.BUNDLED_LISTENER);
@@ -402,7 +402,7 @@ public class ScreenRecordService extends Service {
     @RequiresApi(api = Build.VERSION_CODES.N)
     private void resumeRecording(){
         mMediaRecorder.resume();
-        if (internalAudioCapture != null) {
+        if (internalAudioCapture != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             internalAudioCapture.resume();
         }
         ResultReceiver receiver = mIntent.getParcelableExtra(ScreenRecordService.BUNDLED_LISTENER);
@@ -690,13 +690,13 @@ public class ScreenRecordService extends Service {
         super.onDestroy();
 
         // Finalize the audio file before the projection is torn down
-        if (internalAudioCapture != null) {
+        if (internalAudioCapture != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             internalAudioCapture.stop();
         }
 
         resetAll();
 
-        if (internalAudioMode) {
+        if (internalAudioMode && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             muxInternalAudio();
         }
 
@@ -707,6 +707,7 @@ public class ScreenRecordService extends Service {
      * Combines the video-only temp recording with the captured system audio
      * into the final destination (content Uri or file path).
      */
+    @RequiresApi(api = Build.VERSION_CODES.Q)
     private void muxInternalAudio() {
         String audioPath = null;
         if (internalAudioCapture != null && internalAudioCapture.hasAudio()) {
