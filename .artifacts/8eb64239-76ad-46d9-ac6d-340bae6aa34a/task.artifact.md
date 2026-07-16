@@ -1,0 +1,10 @@
+- [x] Clean up `privacy_policy.html`
+    - [x] Remove AdMob references from Section 2.2
+    - [x] Update Permission Table in Section 2.3
+    - [x] Remove AdMob Integration from Section 3.3
+    - [x] Delete Section 4.1 (Google AdMob)
+    - [x] Update Data Control in Section 6.1
+    - [x] Update Opt-Out Options in Section 6.3
+    - [x] Update Data Safety in Section 12.2
+- [x] Verify changes in Privacy Policy
+- [x] Create walkthrough summary
