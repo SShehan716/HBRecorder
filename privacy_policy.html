@@ -160,10 +160,15 @@
                     <td>Read your saved recordings for playback, trimming, and the Vault feature</td>
                     <td>Android 13 and above</td>
                 </tr>
+                <tr>
+                    <td><strong>ACCESS_NETWORK_STATE</strong></td>
+                    <td>Included automatically by the built-in video player library (Media3 ExoPlayer), which supports network state checks as part of its general playback engine. This app only uses it to play back your locally saved recordings — no video is ever streamed or loaded from a network.</td>
+                    <td>When viewing a recording in the app</td>
+                </tr>
             </tbody>
         </table>
         <p>
-            <strong>Note:</strong> This app does not request the <code>INTERNET</code> permission. It cannot and does not connect to the internet or send any data anywhere.
+            <strong>Note:</strong> This app does not request the <code>INTERNET</code> permission and cannot make network requests. <code>ACCESS_NETWORK_STATE</code> above only allows the app to check connectivity status — it does not grant the ability to send or receive any data.
         </p>
 
         <h2>3. How We Use Your Information</h2>
