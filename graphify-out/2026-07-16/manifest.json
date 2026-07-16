@@ -1,0 +1,342 @@
+{
+  "app/build.gradle": {
+    "mtime": 1784130752.1463547,
+    "ast_hash": "88da5b9791714045ea5ac0169dad22a2",
+    "semantic_hash": "88da5b9791714045ea5ac0169dad22a2"
+  },
+  "app/release/output-metadata.json": {
+    "mtime": 1752336241.9306903,
+    "ast_hash": "cb09a96fde62b34c226ce71a50459684",
+    "semantic_hash": "cb09a96fde62b34c226ce71a50459684"
+  },
+  "app/src/androidTest/java/com/hbisoft/hbrecorderexample/ExampleInstrumentedTest.java": {
+    "mtime": 1748324292.2801878,
+    "ast_hash": "77c3923706165ac31d593bf5956842d7",
+    "semantic_hash": "77c3923706165ac31d593bf5956842d7"
+  },
+  "app/src/main/java/com/ss/Misty_Screen_Recoder_lite/AdvancedSettingsFragment.java": {
+    "mtime": 1783962706.032216,
+    "ast_hash": "9df51663f1862718f13be770455c6de7",
+    "semantic_hash": "9df51663f1862718f13be770455c6de7"
+  },
+  "app/src/main/java/com/ss/Misty_Screen_Recoder_lite/FloatingDockService.java": {
+    "mtime": 1783960055.0775917,
+    "ast_hash": "918b5eb414a4a7370f91597a730ff31b",
+    "semantic_hash": "918b5eb414a4a7370f91597a730ff31b"
+  },
+  "app/src/main/java/com/ss/Misty_Screen_Recoder_lite/LogUtils.java": {
+    "mtime": 1752271054.4949384,
+    "ast_hash": "81e4ad0edcb994c53402731faafbba87",
+    "semantic_hash": "81e4ad0edcb994c53402731faafbba87"
+  },
+  "app/src/main/java/com/ss/Misty_Screen_Recoder_lite/MainActivity.java": {
+    "mtime": 1783963647.985204,
+    "ast_hash": "3e0994694413b0e7e7e1aa4be438e85e",
+    "semantic_hash": "3e0994694413b0e7e7e1aa4be438e85e"
+  },
+  "app/src/main/java/com/ss/Misty_Screen_Recoder_lite/MyApplication.java": {
+    "mtime": 1783932229.034657,
+    "ast_hash": "669f5b6740c9b1b050e554f12587a584",
+    "semantic_hash": "669f5b6740c9b1b050e554f12587a584"
+  },
+  "app/src/main/java/com/ss/Misty_Screen_Recoder_lite/PinManager.java": {
+    "mtime": 1783932467.0331671,
+    "ast_hash": "1e8ae83fa4b45b957d52a24e6bfbbf69",
+    "semantic_hash": "1e8ae83fa4b45b957d52a24e6bfbbf69"
+  },
+  "app/src/main/java/com/ss/Misty_Screen_Recoder_lite/QuickSettingsFragment.java": {
+    "mtime": 1783932172.4013128,
+    "ast_hash": "fa593353c27584fbab864d2ba33a3f02",
+    "semantic_hash": "fa593353c27584fbab864d2ba33a3f02"
+  },
+  "app/src/main/java/com/ss/Misty_Screen_Recoder_lite/RecordingItem.java": {
+    "mtime": 1783932563.9979327,
+    "ast_hash": "711eed9b82478cd3f34880e613010f4c",
+    "semantic_hash": "711eed9b82478cd3f34880e613010f4c"
+  },
+  "app/src/main/java/com/ss/Misty_Screen_Recoder_lite/RecordingsActivity.java": {
+    "mtime": 1783932628.6613152,
+    "ast_hash": "bb3c393a91ffef8f2f50ef3ca7f319eb",
+    "semantic_hash": "bb3c393a91ffef8f2f50ef3ca7f319eb"
+  },
+  "app/src/main/java/com/ss/Misty_Screen_Recoder_lite/RecordingsAdapter.java": {
+    "mtime": 1783960987.2191784,
+    "ast_hash": "d70e96508ccd4fe020dea137b5532bd8",
+    "semantic_hash": "d70e96508ccd4fe020dea137b5532bd8"
+  },
+  "app/src/main/java/com/ss/Misty_Screen_Recoder_lite/SettingsActivity.java": {
+    "mtime": 1756538603.9487002,
+    "ast_hash": "c4760e66ba554e2786b5494ea6861541",
+    "semantic_hash": "c4760e66ba554e2786b5494ea6861541"
+  },
+  "app/src/main/java/com/ss/Misty_Screen_Recoder_lite/TrimActivity.java": {
+    "mtime": 1783932692.4041862,
+    "ast_hash": "4d3e075f7b880ccbb11fc1c01963ea5d",
+    "semantic_hash": "4d3e075f7b880ccbb11fc1c01963ea5d"
+  },
+  "app/src/main/java/com/ss/Misty_Screen_Recoder_lite/TrimUtils.java": {
+    "mtime": 1783932542.399278,
+    "ast_hash": "64dac38c4b640e9ad6b1350b5564adac",
+    "semantic_hash": "64dac38c4b640e9ad6b1350b5564adac"
+  },
+  "app/src/main/java/com/ss/Misty_Screen_Recoder_lite/VaultActivity.java": {
+    "mtime": 1783932667.850106,
+    "ast_hash": "8ed93afb29bce5bb771f96e6a4f7b2dd",
+    "semantic_hash": "8ed93afb29bce5bb771f96e6a4f7b2dd"
+  },
+  "app/src/main/java/com/ss/Misty_Screen_Recoder_lite/VaultCrypto.java": {
+    "mtime": 1783932452.8190084,
+    "ast_hash": "c6f04ba2fc270f45aa12ab37404cceae",
+    "semantic_hash": "c6f04ba2fc270f45aa12ab37404cceae"
+  },
+  "app/src/main/java/com/ss/Misty_Screen_Recoder_lite/VaultManager.java": {
+    "mtime": 1783932514.8628526,
+    "ast_hash": "6c2c8d3c3885a583822bebcc77f6b352",
+    "semantic_hash": "6c2c8d3c3885a583822bebcc77f6b352"
+  },
+  "app/src/main/java/com/ss/Misty_Screen_Recoder_lite/VideoPlayerActivity.java": {
+    "mtime": 1783932555.1728017,
+    "ast_hash": "07436e3cbf3fb060f367169203e82eb3",
+    "semantic_hash": "07436e3cbf3fb060f367169203e82eb3"
+  },
+  "app/src/main/java/com/ss/Misty_Screen_Recoder_lite/ViewPagerAdapter.java": {
+    "mtime": 1748334389.2182891,
+    "ast_hash": "99f68329865cd5a6e3aa5596d6d5e402",
+    "semantic_hash": "99f68329865cd5a6e3aa5596d6d5e402"
+  },
+  "app/src/test/java/com/hbisoft/hbrecorderexample/ExampleUnitTest.java": {
+    "mtime": 1748324292.2836654,
+    "ast_hash": "86ea14a0d5cea40cf2a756dc0c6feac5",
+    "semantic_hash": "86ea14a0d5cea40cf2a756dc0c6feac5"
+  },
+  "build.gradle": {
+    "mtime": 1784131421.2201128,
+    "ast_hash": "580c83e93a3b620ff995fa517030add9",
+    "semantic_hash": "580c83e93a3b620ff995fa517030add9"
+  },
+  "gradlew": {
+    "mtime": 1748324292.284584,
+    "ast_hash": "48fe0bd77a66bbb62c1150926ab1332c",
+    "semantic_hash": "48fe0bd77a66bbb62c1150926ab1332c"
+  },
+  "hbrecorder/build.gradle": {
+    "mtime": 1755470007.6511376,
+    "ast_hash": "469579e8e427d1b21420a41be14b7dee",
+    "semantic_hash": "469579e8e427d1b21420a41be14b7dee"
+  },
+  "hbrecorder/src/androidTest/java/com/hbisoft/hbrecorder/ExampleInstrumentedTest.java": {
+    "mtime": 1748324292.2853296,
+    "ast_hash": "39bc525bcae4a710b2ff6036c3b5d06f",
+    "semantic_hash": "39bc525bcae4a710b2ff6036c3b5d06f"
+  },
+  "hbrecorder/src/main/java/com/hbisoft/hbrecorder/AvMuxer.java": {
+    "mtime": 1783963519.2361414,
+    "ast_hash": "272dd5cb2fe6ec97411de3419b2f4e5f",
+    "semantic_hash": "272dd5cb2fe6ec97411de3419b2f4e5f"
+  },
+  "hbrecorder/src/main/java/com/hbisoft/hbrecorder/Constants.java": {
+    "mtime": 1748324292.285706,
+    "ast_hash": "e406ca9de13e0b45896d6cbb18a376de",
+    "semantic_hash": "e406ca9de13e0b45896d6cbb18a376de"
+  },
+  "hbrecorder/src/main/java/com/hbisoft/hbrecorder/Countdown.java": {
+    "mtime": 1748324292.2857754,
+    "ast_hash": "8470eb0c5278499c9c245ab544bf05ea",
+    "semantic_hash": "8470eb0c5278499c9c245ab544bf05ea"
+  },
+  "hbrecorder/src/main/java/com/hbisoft/hbrecorder/FileObserver.java": {
+    "mtime": 1748324292.2858417,
+    "ast_hash": "f501e3d1f30c6e4741f17fc048090ad9",
+    "semantic_hash": "f501e3d1f30c6e4741f17fc048090ad9"
+  },
+  "hbrecorder/src/main/java/com/hbisoft/hbrecorder/HBRecorder.java": {
+    "mtime": 1748324292.285937,
+    "ast_hash": "544b3309bfc2d1cab68c3dce5c8e5ee2",
+    "semantic_hash": "544b3309bfc2d1cab68c3dce5c8e5ee2"
+  },
+  "hbrecorder/src/main/java/com/hbisoft/hbrecorder/HBRecorderCodecInfo.java": {
+    "mtime": 1748324292.2860394,
+    "ast_hash": "37093f6af09bcff6129031ec90f974f7",
+    "semantic_hash": "37093f6af09bcff6129031ec90f974f7"
+  },
+  "hbrecorder/src/main/java/com/hbisoft/hbrecorder/HBRecorderListener.java": {
+    "mtime": 1748324292.2861223,
+    "ast_hash": "4be689814c20357223d124f2366f56bf",
+    "semantic_hash": "4be689814c20357223d124f2366f56bf"
+  },
+  "hbrecorder/src/main/java/com/hbisoft/hbrecorder/InternalAudioCapture.java": {
+    "mtime": 1783963515.8989303,
+    "ast_hash": "857d7d202e84ec047bc2b16e10b1f526",
+    "semantic_hash": "857d7d202e84ec047bc2b16e10b1f526"
+  },
+  "hbrecorder/src/main/java/com/hbisoft/hbrecorder/MyListener.java": {
+    "mtime": 1748324292.2861946,
+    "ast_hash": "88bfea90036243c77e335a58d44672c7",
+    "semantic_hash": "88bfea90036243c77e335a58d44672c7"
+  },
+  "hbrecorder/src/main/java/com/hbisoft/hbrecorder/NotificationReceiver.java": {
+    "mtime": 1748324292.2862766,
+    "ast_hash": "b3b5222ae0051c2f0d3356b5cd2c0430",
+    "semantic_hash": "b3b5222ae0051c2f0d3356b5cd2c0430"
+  },
+  "hbrecorder/src/main/java/com/hbisoft/hbrecorder/ScreenRecordService.java": {
+    "mtime": 1783963608.6086707,
+    "ast_hash": "7b1717bb24edfe1a803fe5618401826f",
+    "semantic_hash": "7b1717bb24edfe1a803fe5618401826f"
+  },
+  "hbrecorder/src/test/java/com/hbisoft/hbrecorder/ExampleUnitTest.java": {
+    "mtime": 1748324292.286897,
+    "ast_hash": "7c78d7e5d9c2ab0f85cfb04c59971a15",
+    "semantic_hash": "7c78d7e5d9c2ab0f85cfb04c59971a15"
+  },
+  "settings.gradle": {
+    "mtime": 1784131163.2062705,
+    "ast_hash": "2f75b862c3adba25d7b996dfe8b8485f",
+    "semantic_hash": "2f75b862c3adba25d7b996dfe8b8485f"
+  },
+  ".github/ISSUE_TEMPLATE/bug_report.md": {
+    "mtime": 1748324292.27077,
+    "ast_hash": "25c370d7cac6b783c7e5c46b67ca9e99",
+    "semantic_hash": "25c370d7cac6b783c7e5c46b67ca9e99"
+  },
+  ".github/ISSUE_TEMPLATE/feature_request.md": {
+    "mtime": 1748324292.2709877,
+    "ast_hash": "174545e1d9daff8020525fdd1e020411",
+    "semantic_hash": "174545e1d9daff8020525fdd1e020411"
+  },
+  ".github/ISSUE_TEMPLATE/question.md": {
+    "mtime": 1748324292.2711587,
+    "ast_hash": "d19eb6c5b3ad9ab24f386fc17a9a3007",
+    "semantic_hash": "d19eb6c5b3ad9ab24f386fc17a9a3007"
+  },
+  ".github/stale.yml": {
+    "mtime": 1748324292.2712893,
+    "ast_hash": "a7b9ccc08cfeb553d0fca05e7ba00223",
+    "semantic_hash": "a7b9ccc08cfeb553d0fca05e7ba00223"
+  },
+  "AUDIO_SOURCE_GUIDE.md": {
+    "mtime": 1754845915.4395454,
+    "ast_hash": "84dd9bde7bb0c316f5a417f89bb2a09b",
+    "semantic_hash": "84dd9bde7bb0c316f5a417f89bb2a09b"
+  },
+  "CLAUDE.md": {
+    "mtime": 1784155378.9943576,
+    "ast_hash": "112f78ca68b09a624f436b015f453818",
+    "semantic_hash": "112f78ca68b09a624f436b015f453818"
+  },
+  "License.txt": {
+    "mtime": 1748324292.2716737,
+    "ast_hash": "4043934c0310af584ea561cf04634d5f",
+    "semantic_hash": "4043934c0310af584ea561cf04634d5f"
+  },
+  "README.md": {
+    "mtime": 1748324292.271869,
+    "ast_hash": "17be84bbc11d3d8c8fdeffe5787f1a77",
+    "semantic_hash": "17be84bbc11d3d8c8fdeffe5787f1a77"
+  },
+  "hbrecorder/CLAUDE.md": {
+    "mtime": 1784155383.928832,
+    "ast_hash": "19cbf4a84c6bef071bfb3f885a25a92f",
+    "semantic_hash": "19cbf4a84c6bef071bfb3f885a25a92f"
+  },
+  "jitpack.yml": {
+    "mtime": 1748324292.2869742,
+    "ast_hash": "65d51bbc9b23841548d9155d1883b287",
+    "semantic_hash": "65d51bbc9b23841548d9155d1883b287"
+  },
+  "privacy_policy.html": {
+    "mtime": 1756509176.8543723,
+    "ast_hash": "884de1891e90c4f07568aa54521c2703",
+    "semantic_hash": "884de1891e90c4f07568aa54521c2703"
+  },
+  "app/src/main/ic_launcher-playstore.png": {
+    "mtime": 1755435493.8072908,
+    "ast_hash": "6c7a074c702040271972e19f55768094",
+    "semantic_hash": "6c7a074c702040271972e19f55768094"
+  },
+  "app/src/main/res/drawable/icon.png": {
+    "mtime": 1627134915.7568998,
+    "ast_hash": "5d9b262b39a11423ff1c0e937279c4f3",
+    "semantic_hash": "5d9b262b39a11423ff1c0e937279c4f3"
+  },
+  "app/src/main/res/mipmap-hdpi/ic_launcher.png": {
+    "mtime": 1755449655.1221735,
+    "ast_hash": "7df40d10a4bf3f8fa5fb0543346bd674",
+    "semantic_hash": "7df40d10a4bf3f8fa5fb0543346bd674"
+  },
+  "app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png": {
+    "mtime": 1755449655.1211035,
+    "ast_hash": "8093b12b09e4e26deebafe909acf00a4",
+    "semantic_hash": "8093b12b09e4e26deebafe909acf00a4"
+  },
+  "app/src/main/res/mipmap-hdpi/ic_launcher_round.png": {
+    "mtime": 1755449655.0849726,
+    "ast_hash": "97a685106d73d8181cb28de7a3a00d02",
+    "semantic_hash": "97a685106d73d8181cb28de7a3a00d02"
+  },
+  "app/src/main/res/mipmap-mdpi/ic_launcher.png": {
+    "mtime": 1755449655.13673,
+    "ast_hash": "9c0e26c81d69d690bce287de1784935c",
+    "semantic_hash": "9c0e26c81d69d690bce287de1784935c"
+  },
+  "app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png": {
+    "mtime": 1755449655.0914803,
+    "ast_hash": "a8bbc2c3b007fb9c08eaf2d2217c6d64",
+    "semantic_hash": "a8bbc2c3b007fb9c08eaf2d2217c6d64"
+  },
+  "app/src/main/res/mipmap-mdpi/ic_launcher_round.png": {
+    "mtime": 1755449655.1046607,
+    "ast_hash": "0e4e6e63a84f651d87e085faf2f61e6c",
+    "semantic_hash": "0e4e6e63a84f651d87e085faf2f61e6c"
+  },
+  "app/src/main/res/mipmap-xhdpi/ic_launcher.png": {
+    "mtime": 1755449655.059582,
+    "ast_hash": "5a5417f741c95737a22bfbbc63029fda",
+    "semantic_hash": "5a5417f741c95737a22bfbbc63029fda"
+  },
+  "app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png": {
+    "mtime": 1755449655.1342165,
+    "ast_hash": "154903a20739116fc2e99587e64e2620",
+    "semantic_hash": "154903a20739116fc2e99587e64e2620"
+  },
+  "app/src/main/res/mipmap-xhdpi/ic_launcher_round.png": {
+    "mtime": 1755449655.0823739,
+    "ast_hash": "87cd45ca00bcce0bbe5e163c401d25e9",
+    "semantic_hash": "87cd45ca00bcce0bbe5e163c401d25e9"
+  },
+  "app/src/main/res/mipmap-xxhdpi/ic_launcher.png": {
+    "mtime": 1755449655.1359134,
+    "ast_hash": "5015624a69624b662a3809c5d0081186",
+    "semantic_hash": "5015624a69624b662a3809c5d0081186"
+  },
+  "app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png": {
+    "mtime": 1755449655.127507,
+    "ast_hash": "0f36cae196122bb2adc2aaab4ec383ef",
+    "semantic_hash": "0f36cae196122bb2adc2aaab4ec383ef"
+  },
+  "app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png": {
+    "mtime": 1755449655.13009,
+    "ast_hash": "5949ade44ccc8dc7a93b06f62800ddf8",
+    "semantic_hash": "5949ade44ccc8dc7a93b06f62800ddf8"
+  },
+  "app/src/main/res/mipmap-xxxhdpi/ic_launcher.png": {
+    "mtime": 1755449655.067221,
+    "ast_hash": "84929f50092140c500d88c1591b38224",
+    "semantic_hash": "84929f50092140c500d88c1591b38224"
+  },
+  "app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png": {
+    "mtime": 1755449655.1029701,
+    "ast_hash": "e4383da920e4930ca49e85efa1d26f43",
+    "semantic_hash": "e4383da920e4930ca49e85efa1d26f43"
+  },
+  "app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png": {
+    "mtime": 1755449655.0891635,
+    "ast_hash": "907b5709d84ca02bcc614be82aa862b9",
+    "semantic_hash": "907b5709d84ca02bcc614be82aa862b9"
+  },
+  "hbrecorder/src/main/res/drawable/icon.png": {
+    "mtime": 1748324292.286501,
+    "ast_hash": "3bc40c32abc4c9d19121ced9e887440f",
+    "semantic_hash": "3bc40c32abc4c9d19121ced9e887440f"
+  }
+}
