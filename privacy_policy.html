@@ -73,7 +73,7 @@
     <div class="container">
         <h1>Privacy Policy for Misty Screen Recorder (Lite)</h1>
         
-        <p><strong>Last Updated:</strong> 12/07/2025</p>
+        <p><strong>Last Updated:</strong> 16/07/2026</p>
         <p><strong>App Name:</strong> Misty Screen Recorder (Lite)<br>
         <strong>Developer:</strong> SShehan<br>
         <strong>Contact Email:</strong> sachinshehan20@gmail.com<br>
@@ -100,8 +100,7 @@
 
         <h3>2.2 Information Collected Automatically</h3>
         <ul>
-            <li><strong>Device Information:</strong> Device model, operating system version, app version</li>
-            <li><strong>Usage Analytics:</strong> App performance data, crash reports (if enabled)</li>
+            <li><strong>Device Information:</strong> Device model and operating system version are read on-device only, to select the right recording configuration for your hardware. This information is never transmitted anywhere.</li>
         </ul>
 
         <h3>2.3 Permissions We Request</h3>
@@ -132,27 +131,40 @@
                     <td>During screen recording</td>
                 </tr>
                 <tr>
+                    <td><strong>FOREGROUND_SERVICE_MEDIA_PROJECTION</strong></td>
+                    <td>Capture the screen as a foreground service (Android 14+ requirement)</td>
+                    <td>During screen recording</td>
+                </tr>
+                <tr>
+                    <td><strong>FOREGROUND_SERVICE_MICROPHONE</strong></td>
+                    <td>Capture microphone audio as a foreground service (Android 14+ requirement)</td>
+                    <td>During screen recording, when audio capture is enabled</td>
+                </tr>
+                <tr>
                     <td><strong>POST_NOTIFICATIONS</strong></td>
                     <td>Show recording status notifications</td>
                     <td>Android 13+ devices</td>
                 </tr>
                 <tr>
-                    <td><strong>INTERNET</strong></td>
-                    <td>Check for app updates and send crash reports (if enabled)</td>
-                    <td>Periodic checks</td>
-                </tr>
-                <tr>
-                    <td><strong>ACCESS_NETWORK_STATE</strong></td>
-                    <td>Verify internet connectivity for updates/reports</td>
-                    <td>When checking connectivity</td>
-                </tr>
-                <tr>
                     <td><strong>WRITE_EXTERNAL_STORAGE</strong></td>
                     <td>Save recordings to device storage</td>
-                    <td>When saving recordings</td>
+                    <td>Android 9 and below only (not requested on newer Android versions)</td>
+                </tr>
+                <tr>
+                    <td><strong>READ_EXTERNAL_STORAGE</strong></td>
+                    <td>Read your saved recordings for playback, trimming, and the Vault feature</td>
+                    <td>Android 12 and below only</td>
+                </tr>
+                <tr>
+                    <td><strong>READ_MEDIA_VIDEO</strong></td>
+                    <td>Read your saved recordings for playback, trimming, and the Vault feature</td>
+                    <td>Android 13 and above</td>
                 </tr>
             </tbody>
         </table>
+        <p>
+            <strong>Note:</strong> This app does not request the <code>INTERNET</code> permission. It cannot and does not connect to the internet or send any data anywhere.
+        </p>
 
         <h2>3. How We Use Your Information</h2>
         
@@ -164,25 +176,15 @@
             <li><strong>Floating Controls:</strong> Provide recording controls overlay</li>
         </ul>
 
-        <h3>3.2 Analytics and Improvement</h3>
+        <h3>3.2 App Reliability</h3>
         <ul>
-            <li><strong>Crash Reports:</strong> Identify and fix app issues (if enabled)</li>
-            <li><strong>Usage Analytics:</strong> Improve app performance and user experience</li>
-            <li><strong>App Updates:</strong> Provide bug fixes and new features</li>
-        </ul>
-
-        <h3>3.3 Performance</h3>
-        <ul>
-            <li><strong>App Reliability:</strong> Monitor and fix crashes for better stability</li>
+            <li><strong>Local Error Handling:</strong> The app is designed to handle errors and unexpected states gracefully, entirely on your device. We do not receive crash reports or usage data from your device.</li>
         </ul>
 
         <h2>4. Third-Party Services</h2>
-        
-        <h3>4.1 Google Play Services</h3>
-        <ul>
-            <li><strong>Analytics:</strong> App usage and performance data</li>
-            <li><strong>Crash Reporting:</strong> Error tracking and debugging</li>
-        </ul>
+        <p>
+            This app does not integrate any third-party analytics, advertising, or crash-reporting SDKs (no Google Play Services Analytics, no Firebase, no AdMob). It has no internet permission and cannot transmit data to us or to any third party.
+        </p>
 
         <h2>5. Data Storage and Security</h2>
         
@@ -204,7 +206,6 @@
         <ul>
             <li><strong>Recordings:</strong> Stored until you delete them</li>
             <li><strong>App Data:</strong> Retained as long as the app is installed</li>
-            <li><strong>Analytics:</strong> Aggregated data retained for app improvement</li>
         </ul>
 
         <h2>6. Your Rights and Choices</h2>
@@ -222,9 +223,7 @@
         </ul>
 
         <h3>6.3 Opt-Out Options</h3>
-        <ul>
-            <li><strong>Analytics:</strong> Disable crash reporting and analytics (if available in settings)</li>
-        </ul>
+        <p>Not applicable — this app does not collect analytics, advertising, or usage data that would require an opt-out.</p>
 
         <h2>7. Children's Privacy &amp; Play Families Policy</h2>
         <p>
@@ -282,6 +281,7 @@
             <li><strong>Screen Recording:</strong> Captures your device screen for recording purposes</li>
             <li><strong>Audio Recording:</strong> Captures system audio during screen recording</li>
             <li><strong>Storage Access:</strong> Saves recordings to your device's storage</li>
+            <li><strong>Media Library Access:</strong> Reads your saved video files to display them in the in-app Recordings Library, and to support playback, trimming, and the Vault feature</li>
             <li><strong>Overlay Permissions:</strong> Displays recording controls over other apps</li>
         </ul>
 
@@ -301,7 +301,7 @@
         </ul>
 
         <div class="footer">
-            <p><strong>This Privacy Policy is effective as of 12/07/2025 and applies to all users of Misty Screen Recorder (Lite).</strong></p>
+            <p><strong>This Privacy Policy is effective as of 16/07/2026 and applies to all users of Misty Screen Recorder (Lite).</strong></p>
         </div>
     </div>
 </body>
